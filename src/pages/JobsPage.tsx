@@ -7,6 +7,7 @@ import { Job } from "@/data/types";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { mapSupabaseJobsToJobs } from "@/utils/mappers";
 
 const JobsPage = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -28,8 +29,9 @@ const JobsPage = () => {
         if (error) throw error;
         
         if (data) {
-          setJobs(data);
-          setFilteredJobs(data);
+          const mappedJobs = mapSupabaseJobsToJobs(data);
+          setJobs(mappedJobs);
+          setFilteredJobs(mappedJobs);
         }
       } catch (error: any) {
         console.error('Error fetching jobs:', error);

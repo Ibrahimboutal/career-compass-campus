@@ -5,7 +5,6 @@ import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ApplicationStatusBadge } from "@/components/ApplicationStatusBadge";
 import { JobCard } from "@/components/JobCard";
 import { Briefcase, Calendar, User } from "lucide-react";
@@ -13,12 +12,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Job } from "@/data/types";
+import { mapSupabaseJobToJob, mapApplicationStatus, mapSupabaseJobsToJobs } from "@/utils/mappers";
 
 // Define application type
 interface Application {
   id: string;
   jobId: string;
-  status: string;
+  status: "Applied" | "Under Review" | "Interview" | "Offered" | "Rejected";
   appliedDate: string;
   job: Job;
 }
@@ -80,9 +80,9 @@ const DashboardPage = () => {
           const formattedApplications = applicationsData.map(app => ({
             id: app.id,
             jobId: app.job_id,
-            status: app.status,
+            status: mapApplicationStatus(app.status),
             appliedDate: app.applied_date,
-            job: app.jobs as unknown as Job
+            job: mapSupabaseJobToJob(app.jobs)
           }));
           
           setApplications(formattedApplications);
@@ -101,7 +101,7 @@ const DashboardPage = () => {
           // Filter out jobs the user has already applied to
           const appliedJobIds = applications.map(app => app.jobId);
           const filteredJobs = jobsData.filter(job => !appliedJobIds.includes(job.id));
-          setRecommendedJobs(filteredJobs.slice(0, 2));
+          setRecommendedJobs(mapSupabaseJobsToJobs(filteredJobs.slice(0, 2)));
         }
         
       } catch (error: any) {

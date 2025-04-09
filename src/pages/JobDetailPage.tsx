@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { JobApplyButton } from "@/components/JobApplyButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { Job } from "@/data/types";
+import { mapSupabaseJobToJob } from "@/utils/mappers";
 
 const JobDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -37,7 +38,7 @@ const JobDetailPage = () => {
         if (jobError) throw jobError;
         
         if (jobData) {
-          setJob(jobData);
+          setJob(mapSupabaseJobToJob(jobData));
         }
         
         // Check if user has applied
@@ -141,7 +142,7 @@ const JobDetailPage = () => {
                         </div>
                         <div className="flex items-center">
                           <Calendar className="h-4 w-4 mr-1" />
-                          Posted {new Date(job.posted_date).toLocaleDateString()}
+                          Posted {new Date(job.postedDate).toLocaleDateString()}
                         </div>
                       </div>
                     </div>
