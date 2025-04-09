@@ -7,12 +7,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ApplicationStatusBadge } from "@/components/ApplicationStatusBadge";
 import { JobCard } from "@/components/JobCard";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ProfileForm } from "@/components/ProfileForm";
+import { ResumeUploader } from "@/components/ResumeUploader";
+import { SkillsManager } from "@/components/SkillsManager";
 import { Briefcase, Calendar, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Job } from "@/data/types";
-import { mapSupabaseJobToJob, mapSupabaseJobsToJobs, mapApplicationStatus } from "@/utils/mappers";
+import { mapSupabaseJobToJob, mapSupabaseJobsToJobs, mapApplicationStatus, mapSupabaseApplicationToApplication } from "@/utils/mappers";
 
 // Define application type as used in this component
 interface Application {
@@ -26,10 +31,12 @@ interface Application {
 // Define user profile type
 interface Profile {
   id: string;
-  name: string;
-  email: string;
-  major: string;
-  graduation_year: string;
+  name: string | null;
+  email: string | null;
+  major: string | null;
+  graduation_year: string | null;
+  resume_url: string | null;
+  skills: string[];
 }
 
 const DashboardPage = () => {
@@ -38,8 +45,27 @@ const DashboardPage = () => {
   const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [profileCompletion, setProfileCompletion] = useState(0);
   const { user } = useAuth();
   const { toast } = useToast();
+
+  // Calculate profile completion percentage
+  const calculateProfileCompletion = (profile: Profile | null) => {
+    if (!profile) return 0;
+    
+    const fields = [
+      !!profile.name,
+      !!profile.email,
+      !!profile.major,
+      !!profile.graduation_year,
+      !!profile.resume_url,
+      profile.skills && profile.skills.length > 0
+    ];
+    
+    const completedFields = fields.filter(Boolean).length;
+    return Math.round((completedFields / fields.length) * 100);
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -58,7 +84,13 @@ const DashboardPage = () => {
         if (profileError) throw profileError;
         
         if (profileData) {
-          setProfile(profileData);
+          // Ensure skills is an array
+          const profileWithSkills = {
+            ...profileData,
+            skills: profileData.skills || []
+          };
+          setProfile(profileWithSkills);
+          setProfileCompletion(calculateProfileCompletion(profileWithSkills));
         }
         
         // Fetch user's applications with job details
@@ -118,6 +150,43 @@ const DashboardPage = () => {
     
     fetchDashboardData();
   }, [user, toast]);
+
+  const handleProfileUpdate = async () => {
+    if (!user) return;
+    
+    try {
+      // Refetch the profile data
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+        
+      if (profileError) throw profileError;
+      
+      if (profileData) {
+        const profileWithSkills = {
+          ...profileData,
+          skills: profileData.skills || []
+        };
+        setProfile(profileWithSkills);
+        setProfileCompletion(calculateProfileCompletion(profileWithSkills));
+      }
+      
+      setIsEditProfileOpen(false);
+      
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been successfully updated.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update profile information",
+        variant: "destructive"
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -184,7 +253,7 @@ const DashboardPage = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between">
-                    <span className="text-3xl font-bold">75%</span>
+                    <span className="text-3xl font-bold">{profileCompletion}%</span>
                     <Button variant="ghost" size="sm" asChild>
                       <Link to="/dashboard" onClick={() => setActiveTab("profile")}>Complete</Link>
                     </Button>
@@ -340,20 +409,46 @@ const DashboardPage = () => {
               <CardContent>
                 <div className="flex flex-col md:flex-row gap-6">
                   <div className="md:w-1/3 flex flex-col items-center">
-                    <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                      <User className="w-12 h-12 text-blue-500" />
-                    </div>
-                    <h3 className="font-semibold text-lg">{profile?.name || "Your Name"}</h3>
+                    <Avatar className="w-24 h-24">
+                      <AvatarFallback className="bg-gray-100 text-blue-500 text-2xl">
+                        {profile?.name ? profile.name.charAt(0).toUpperCase() : <User className="w-12 h-12" />}
+                      </AvatarFallback>
+                    </Avatar>
+                    <h3 className="font-semibold text-lg mt-4">{profile?.name || "Your Name"}</h3>
                     <p className="text-gray-600">{profile?.major || "Your Major"} Student</p>
                     <p className="text-sm text-gray-500">Graduating {profile?.graduation_year || "Year"}</p>
                     
                     <div className="mt-4 w-full">
-                      <Button variant="outline" className="w-full">Edit Profile</Button>
+                      <Dialog open={isEditProfileOpen} onOpenChange={setIsEditProfileOpen}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" className="w-full">Edit Profile</Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px]">
+                          <DialogHeader>
+                            <DialogTitle>Edit Profile</DialogTitle>
+                            <DialogDescription>
+                              Update your personal and academic information.
+                            </DialogDescription>
+                          </DialogHeader>
+                          {profile && (
+                            <ProfileForm 
+                              initialData={{ 
+                                id: profile.id, 
+                                name: profile.name || "", 
+                                email: profile.email || "", 
+                                major: profile.major || "", 
+                                graduation_year: profile.graduation_year || "" 
+                              }} 
+                              onSuccess={handleProfileUpdate} 
+                            />
+                          )}
+                        </DialogContent>
+                      </Dialog>
                     </div>
                   </div>
                   
                   <div className="md:w-2/3">
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                       <div>
                         <h3 className="font-medium mb-2">Personal Information</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -376,23 +471,72 @@ const DashboardPage = () => {
                         </div>
                       </div>
                       
-                      <div className="pt-2 border-t">
+                      <div className="pt-4 border-t">
                         <h3 className="font-medium mb-2">Resume & Documents</h3>
-                        <div className="bg-gray-50 p-4 rounded-lg border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                          <div>
-                            <p className="font-medium">No resume uploaded</p>
-                            <p className="text-sm text-gray-500">Upload your resume to apply more easily</p>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button size="sm">Upload Resume</Button>
-                          </div>
+                        <div className="bg-gray-50 p-4 rounded-lg border">
+                          {profile?.resume_url ? (
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                              <div>
+                                <p className="font-medium">Resume uploaded</p>
+                                <p className="text-sm text-gray-500">
+                                  <a 
+                                    href={profile.resume_url} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-blue-500 hover:underline"
+                                  >
+                                    View your resume
+                                  </a>
+                                </p>
+                              </div>
+                              <div>
+                                {user && (
+                                  <ResumeUploader
+                                    userId={user.id}
+                                    existingResume={profile.resume_url}
+                                    onUploadComplete={(url) => {
+                                      setProfile({...profile, resume_url: url});
+                                      setProfileCompletion(calculateProfileCompletion({...profile, resume_url: url}));
+                                    }}
+                                  />
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                              <div>
+                                <p className="font-medium">No resume uploaded</p>
+                                <p className="text-sm text-gray-500">Upload your resume to apply more easily</p>
+                              </div>
+                              <div>
+                                {user && (
+                                  <ResumeUploader
+                                    userId={user.id}
+                                    onUploadComplete={(url) => {
+                                      setProfile({...profile, resume_url: url});
+                                      setProfileCompletion(calculateProfileCompletion({...profile, resume_url: url}));
+                                    }}
+                                  />
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                       
-                      <div className="pt-2 border-t">
+                      <div className="pt-4 border-t">
                         <h3 className="font-medium mb-2">Skills & Interests</h3>
-                        <div className="flex flex-wrap gap-2">
-                          <Button size="sm" variant="outline" className="h-6">+ Add Skills</Button>
+                        <div className="bg-gray-50 p-4 rounded-lg border">
+                          {user && profile && (
+                            <SkillsManager
+                              userId={user.id}
+                              initialSkills={profile.skills || []}
+                              onUpdate={(skills) => {
+                                setProfile({...profile, skills});
+                                setProfileCompletion(calculateProfileCompletion({...profile, skills}));
+                              }}
+                            />
+                          )}
                         </div>
                       </div>
                     </div>
