@@ -9,7 +9,129 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      applications: {
+        Row: {
+          applied_date: string
+          created_at: string
+          id: string
+          job_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          applied_date?: string
+          created_at?: string
+          id?: string
+          job_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          applied_date?: string
+          created_at?: string
+          id?: string
+          job_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jobs: {
+        Row: {
+          company: string
+          created_at: string
+          deadline: string
+          description: string
+          id: string
+          location: string
+          logo: string | null
+          posted_date: string
+          requirements: string[]
+          salary: string | null
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          company: string
+          created_at?: string
+          deadline: string
+          description: string
+          id?: string
+          location: string
+          logo?: string | null
+          posted_date?: string
+          requirements: string[]
+          salary?: string | null
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          company?: string
+          created_at?: string
+          deadline?: string
+          description?: string
+          id?: string
+          location?: string
+          logo?: string | null
+          posted_date?: string
+          requirements?: string[]
+          salary?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          graduation_year: string | null
+          id: string
+          major: string | null
+          name: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          graduation_year?: string | null
+          id: string
+          major?: string | null
+          name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          graduation_year?: string | null
+          id?: string
+          major?: string | null
+          name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

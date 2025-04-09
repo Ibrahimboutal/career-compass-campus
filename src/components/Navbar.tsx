@@ -1,14 +1,43 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, User, Briefcase } from "lucide-react";
+import { Search, User, Briefcase, LogOut } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/contexts/AuthContext";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
 
 export function Navbar() {
   const isMobile = useIsMobile();
   const [showSearch, setShowSearch] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Signed out",
+        description: "You have been successfully signed out."
+      });
+      navigate("/");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "There was an error signing out.",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white">
@@ -44,21 +73,44 @@ export function Navbar() {
               <Search className="h-5 w-5" />
             </Button>
           )}
-          <Link to="/dashboard">
-            <Button variant="ghost" className="text-muted-foreground">
-              Dashboard
-            </Button>
-          </Link>
+          
           <Link to="/jobs">
             <Button variant="ghost" className="text-muted-foreground">
               Browse Jobs
             </Button>
           </Link>
-          <Link to="/profile">
-            <Button variant="ghost" size="icon" className="text-muted-foreground">
-              <User className="h-5 w-5" />
-            </Button>
-          </Link>
+
+          {user ? (
+            <>
+              <Link to="/dashboard">
+                <Button variant="ghost" className="text-muted-foreground">
+                  Dashboard
+                </Button>
+              </Link>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-muted-foreground">
+                    <User className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="cursor-pointer">Profile</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          ) : (
+            <Link to="/auth">
+              <Button>Sign In</Button>
+            </Link>
+          )}
         </nav>
       </div>
       
