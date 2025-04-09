@@ -23,6 +23,16 @@ export const mapSupabaseJobsToJobs = (supabaseJobs: any[]): Job[] => {
   return supabaseJobs.map(mapSupabaseJobToJob);
 };
 
+// Map Supabase application to our Application type
+export const mapSupabaseApplicationToApplication = (supabaseApp: any, job: Job): Application => {
+  return {
+    id: supabaseApp.id,
+    jobId: supabaseApp.job_id,
+    status: mapApplicationStatus(supabaseApp.status),
+    appliedDate: supabaseApp.applied_date
+  };
+};
+
 // Map Supabase application status to our ApplicationStatus type
 export const mapApplicationStatus = (status: string): "Applied" | "Under Review" | "Interview" | "Offered" | "Rejected" => {
   const validStatuses = ["Applied", "Under Review", "Interview", "Offered", "Rejected"];

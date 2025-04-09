@@ -12,9 +12,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Job } from "@/data/types";
-import { mapSupabaseJobToJob, mapApplicationStatus, mapSupabaseJobsToJobs } from "@/utils/mappers";
+import { mapSupabaseJobToJob, mapSupabaseJobsToJobs, mapApplicationStatus } from "@/utils/mappers";
 
-// Define application type
+// Define application type as used in this component
 interface Application {
   id: string;
   jobId: string;
@@ -227,8 +227,8 @@ const DashboardPage = () => {
                       {applications.slice(0, 3).map(application => (
                         <div key={application.id} className="flex items-center justify-between border-b pb-4 last:border-0">
                           <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 bg-job-lightgray rounded-md flex items-center justify-center">
-                              <Briefcase className="w-5 h-5 text-job-blue" />
+                            <div className="w-10 h-10 bg-gray-100 rounded-md flex items-center justify-center">
+                              <Briefcase className="w-5 h-5 text-blue-500" />
                             </div>
                             <div>
                               <h3 className="font-medium">{application.job.title}</h3>
@@ -242,7 +242,7 @@ const DashboardPage = () => {
                           
                           <div className="flex flex-col items-end">
                             <ApplicationStatusBadge status={application.status} />
-                            <Link to={`/jobs/${application.jobId}`} className="text-xs text-job-blue mt-2 hover:underline">
+                            <Link to={`/jobs/${application.jobId}`} className="text-xs text-blue-500 mt-2 hover:underline">
                               View Job
                             </Link>
                           </div>
@@ -305,7 +305,7 @@ const DashboardPage = () => {
                       <div key={application.id} className="flex flex-col md:flex-row md:items-center justify-between bg-gray-50 p-4 rounded-lg border">
                         <div className="flex items-start gap-3 mb-3 md:mb-0">
                           <div className="w-10 h-10 bg-white rounded-md flex items-center justify-center">
-                            <Briefcase className="w-5 h-5 text-job-blue" />
+                            <Briefcase className="w-5 h-5 text-blue-500" />
                           </div>
                           <div>
                             <h3 className="font-medium">{application.job.title}</h3>
@@ -340,8 +340,8 @@ const DashboardPage = () => {
               <CardContent>
                 <div className="flex flex-col md:flex-row gap-6">
                   <div className="md:w-1/3 flex flex-col items-center">
-                    <div className="w-24 h-24 bg-job-lightgray rounded-full flex items-center justify-center mb-4">
-                      <User className="w-12 h-12 text-job-blue" />
+                    <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                      <User className="w-12 h-12 text-blue-500" />
                     </div>
                     <h3 className="font-semibold text-lg">{profile?.name || "Your Name"}</h3>
                     <p className="text-gray-600">{profile?.major || "Your Major"} Student</p>
