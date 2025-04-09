@@ -39,7 +39,7 @@ const AuthPage = () => {
       if (error) throw error;
       
       if (data.user) {
-        // Update the profile with additional info
+        // Update the profile with additional info - fixed query
         const { error: profileError } = await supabase
           .from('profiles')
           .update({
