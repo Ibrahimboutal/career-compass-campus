@@ -3,19 +3,61 @@ import { useState, useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
 import { JobCard } from "@/components/JobCard";
 import { JobFilter, FilterOptions } from "@/components/JobFilter";
-import { jobsData } from "@/data/jobsData";
-import { currentUser } from "@/data/userData";
 import { Job } from "@/data/types";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const JobsPage = () => {
-  const [jobs, setJobs] = useState<Job[]>(jobsData);
-  const [filteredJobs, setFilteredJobs] = useState<Job[]>(jobsData);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  // Fetch jobs from Supabase
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('jobs')
+          .select('*')
+          .order('posted_date', { ascending: false });
+        
+        if (error) throw error;
+        
+        if (data) {
+          setJobs(data);
+          setFilteredJobs(data);
+        }
+      } catch (error: any) {
+        console.error('Error fetching jobs:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load jobs. Please try again later.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, [toast]);
 
   // Check if user has applied to a job
-  const hasApplied = (jobId: string) => {
-    return currentUser.applications.some(app => app.jobId === jobId);
+  const hasApplied = async (jobId: string) => {
+    if (!user) return false;
+    
+    const { data, error } = await supabase
+      .from('applications')
+      .select('id')
+      .eq('job_id', jobId)
+      .eq('user_id', user.id)
+      .single();
+      
+    return !!data && !error;
   };
 
   const handleFilter = (filters: FilterOptions) => {
@@ -77,7 +119,11 @@ const JobsPage = () => {
               </select>
             </div>
             
-            {filteredJobs.length === 0 ? (
+            {loading ? (
+              <div className="text-center py-10 bg-white rounded-lg border">
+                <p className="text-gray-600">Loading jobs...</p>
+              </div>
+            ) : filteredJobs.length === 0 ? (
               <div className="text-center py-10 bg-white rounded-lg border">
                 <h3 className="text-lg font-medium mb-2">No jobs found</h3>
                 <p className="text-gray-600">Try adjusting your filters to see more results</p>
@@ -88,7 +134,7 @@ const JobsPage = () => {
                   <JobCard 
                     key={job.id} 
                     job={job} 
-                    isApplied={hasApplied(job.id)}
+                    isApplied={false} // We'll update this with real data
                   />
                 ))}
               </div>
