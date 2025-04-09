@@ -433,7 +433,7 @@ const DashboardPage = () => {
                           {profile && (
                             <ProfileForm 
                               initialData={{ 
-                                id: profile.id, 
+                                
                                 name: profile.name || "", 
                                 email: profile.email || "", 
                                 major: profile.major || "", 
