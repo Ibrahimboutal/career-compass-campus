@@ -42,6 +42,7 @@ export function JobForm({ job, employerId, onSuccess }: JobFormProps) {
   const [companyName, setCompanyName] = useState<string>("");
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { getEmployerById } = useEmployers();
 
   useEffect(() => {
     if (employerId) {
@@ -141,16 +142,10 @@ export function JobForm({ job, employerId, onSuccess }: JobFormProps) {
 
   const getEmployerDetails = async (employerId: string) => {
     try {
-      const { data, error } = await supabase
-        .rpc('get_employer_by_id', { employer_id_param: employerId });
-
-      if (error) {
-        console.error("Error fetching employer details:", error);
-        return;
-      }
-
-      if (data && data.length > 0) {
-        setCompanyName(data[0].company_name);
+      const employer = await getEmployerById(employerId);
+      
+      if (employer) {
+        setCompanyName(employer.company_name);
       }
     } catch (error) {
       console.error("Failed to fetch employer details:", error);

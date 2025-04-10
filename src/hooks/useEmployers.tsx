@@ -13,15 +13,18 @@ export const useEmployers = () => {
     try {
       setIsLoading(true);
       
-      // We need to use rpc to query the employers table as it's not in the type definitions
+      // Use raw SQL query instead of RPC to avoid TypeScript issues
       const { data, error } = await supabase
-        .rpc('get_employer_by_user_id', { user_id_param: userId });
+        .from('employers')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
       
       if (error) throw error;
       
-      if (!data || data.length === 0) return null;
+      if (!data) return null;
       
-      return mapSupabaseEmployerToEmployer(data[0]);
+      return mapSupabaseEmployerToEmployer(data);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -38,17 +41,20 @@ export const useEmployers = () => {
     try {
       setIsLoading(true);
       
-      // We need to use rpc to insert into the employers table
+      // Insert directly into employers table instead of using RPC
       const { data, error } = await supabase
-        .rpc('create_employer', { 
-          user_id_param: employerData.user_id,
-          company_name_param: employerData.company_name,
-          industry_param: employerData.industry,
-          company_size_param: employerData.company_size,
-          website_param: employerData.website,
-          company_description_param: employerData.company_description,
-          logo_url_param: employerData.logo_url
-        });
+        .from('employers')
+        .insert({
+          user_id: employerData.user_id,
+          company_name: employerData.company_name,
+          industry: employerData.industry,
+          company_size: employerData.company_size,
+          website: employerData.website,
+          company_description: employerData.company_description,
+          logo_url: employerData.logo_url
+        })
+        .select('*')
+        .single();
       
       if (error) throw error;
       
@@ -71,17 +77,20 @@ export const useEmployers = () => {
     try {
       setIsLoading(true);
       
-      // We need to use rpc to update the employers table
+      // Update directly instead of using RPC
       const { data, error } = await supabase
-        .rpc('update_employer', { 
-          employer_id_param: id,
-          company_name_param: employerData.company_name,
-          industry_param: employerData.industry,
-          company_size_param: employerData.company_size,
-          website_param: employerData.website,
-          company_description_param: employerData.company_description,
-          logo_url_param: employerData.logo_url
-        });
+        .from('employers')
+        .update({
+          company_name: employerData.company_name,
+          industry: employerData.industry,
+          company_size: employerData.company_size,
+          website: employerData.website,
+          company_description: employerData.company_description,
+          logo_url: employerData.logo_url
+        })
+        .eq('id', id)
+        .select('*')
+        .single();
       
       if (error) throw error;
       
@@ -100,10 +109,39 @@ export const useEmployers = () => {
     }
   };
 
+  const getEmployerById = async (employerId: string): Promise<Employer | null> => {
+    try {
+      setIsLoading(true);
+      
+      // Use direct query instead of RPC
+      const { data, error } = await supabase
+        .from('employers')
+        .select('*')
+        .eq('id', employerId)
+        .single();
+      
+      if (error) throw error;
+      
+      if (!data) return null;
+      
+      return mapSupabaseEmployerToEmployer(data);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to fetch employer data",
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     isLoading,
     getEmployerByUserId,
     createEmployer,
-    updateEmployer
+    updateEmployer,
+    getEmployerById
   };
 };
