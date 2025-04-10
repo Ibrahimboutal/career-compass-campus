@@ -54,12 +54,52 @@ export type Database = {
           },
         ]
       }
+      employers: {
+        Row: {
+          company_description: string | null
+          company_name: string
+          company_size: string | null
+          created_at: string
+          id: string
+          industry: string | null
+          logo_url: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          company_description?: string | null
+          company_name: string
+          company_size?: string | null
+          created_at?: string
+          id?: string
+          industry?: string | null
+          logo_url?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          company_description?: string | null
+          company_name?: string
+          company_size?: string | null
+          created_at?: string
+          id?: string
+          industry?: string | null
+          logo_url?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       jobs: {
         Row: {
           company: string
           created_at: string
           deadline: string
           description: string
+          employer_id: string | null
           id: string
           location: string
           logo: string | null
@@ -75,6 +115,7 @@ export type Database = {
           created_at?: string
           deadline: string
           description: string
+          employer_id?: string | null
           id?: string
           location: string
           logo?: string | null
@@ -90,6 +131,7 @@ export type Database = {
           created_at?: string
           deadline?: string
           description?: string
+          employer_id?: string | null
           id?: string
           location?: string
           logo?: string | null
@@ -100,7 +142,15 @@ export type Database = {
           type?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "jobs_employer_id_fkey"
+            columns: ["employer_id"]
+            isOneToOne: false
+            referencedRelation: "employers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

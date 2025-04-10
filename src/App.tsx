@@ -11,6 +11,10 @@ import JobsPage from "./pages/JobsPage";
 import JobDetailPage from "./pages/JobDetailPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProfilePage from "./pages/ProfilePage";
+import EmployerDashboardPage from "./pages/EmployerDashboardPage";
+import EmployerRegistrationPage from "./pages/EmployerRegistrationPage";
+import EmployerProfileEditPage from "./pages/EmployerProfileEditPage";
+import JobEditPage from "./pages/JobEditPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,6 +56,39 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        } 
+      />
+      {/* Employer Routes */}
+      <Route 
+        path="/employer/register" 
+        element={
+          <ProtectedRoute>
+            <EmployerRegistrationPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/employer/dashboard" 
+        element={
+          <ProtectedRoute>
+            <EmployerDashboardPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/employer/profile/edit" 
+        element={
+          <ProtectedRoute>
+            <EmployerProfileEditPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/employer/jobs/:id/edit" 
+        element={
+          <ProtectedRoute>
+            <JobEditPage />
           </ProtectedRoute>
         } 
       />

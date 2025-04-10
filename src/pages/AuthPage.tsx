@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Briefcase } from "lucide-react";
-import { Link } from "react-router-dom";
 
 const AuthPage = () => {
   const [email, setEmail] = useState("");
@@ -18,6 +17,7 @@ const AuthPage = () => {
   const [major, setMajor] = useState("");
   const [graduationYear, setGraduationYear] = useState("");
   const [loading, setLoading] = useState(false);
+  const [userType, setUserType] = useState<"student" | "employer">("student");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -32,6 +32,7 @@ const AuthPage = () => {
         options: {
           data: {
             name,
+            user_type: userType,
           },
         }
       });
@@ -39,13 +40,14 @@ const AuthPage = () => {
       if (error) throw error;
       
       if (data.user) {
-        // Update the profile with additional info - fixed query
+        // Update the profile with additional info
         const { error: profileError } = await supabase
           .from('profiles')
           .update({
             name,
-            major,
-            graduation_year: graduationYear
+            major: userType === 'student' ? major : null,
+            graduation_year: userType === 'student' ? graduationYear : null,
+            skills: []
           })
           .eq('id', data.user.id);
         
@@ -56,7 +58,11 @@ const AuthPage = () => {
           description: "Welcome to CampusJobs! Please check your email to verify your account."
         });
         
-        navigate("/dashboard");
+        if (userType === 'employer') {
+          navigate("/employer/register");
+        } else {
+          navigate("/dashboard");
+        }
       }
     } catch (error: any) {
       toast({
@@ -86,7 +92,17 @@ const AuthPage = () => {
         description: "You've successfully signed in."
       });
       
-      navigate("/dashboard");
+      // Check if user is an employer
+      const { data: employerData, error: employerError } = await supabase
+        .from('employers')
+        .select('id')
+        .eq('user_id', data.user.id);
+      
+      if (!employerError && employerData && employerData.length > 0) {
+        navigate("/employer/dashboard");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (error: any) {
       toast({
         title: "Error",
@@ -168,7 +184,31 @@ const AuthPage = () => {
               <form onSubmit={handleSignUp}>
                 <CardContent className="space-y-4 pt-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
+                    <Label htmlFor="user-type">I am a:</Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Button
+                        type="button"
+                        variant={userType === "student" ? "default" : "outline"}
+                        onClick={() => setUserType("student")}
+                        className="w-full"
+                      >
+                        Student
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={userType === "employer" ? "default" : "outline"}
+                        onClick={() => setUserType("employer")}
+                        className="w-full"
+                      >
+                        Employer
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="name">
+                      {userType === "student" ? "Full Name" : "Contact Person Name"}
+                    </Label>
                     <Input
                       id="name"
                       placeholder="Jane Doe"
@@ -179,11 +219,11 @@ const AuthPage = () => {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="email-signup">University Email</Label>
+                    <Label htmlFor="email-signup">Email</Label>
                     <Input
                       id="email-signup"
                       type="email"
-                      placeholder="your.email@university.edu"
+                      placeholder={userType === "student" ? "your.email@university.edu" : "contact@company.com"}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -201,25 +241,35 @@ const AuthPage = () => {
                     />
                   </div>
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="major">Major</Label>
-                    <Input
-                      id="major"
-                      placeholder="Computer Science"
-                      value={major}
-                      onChange={(e) => setMajor(e.target.value)}
-                    />
-                  </div>
+                  {userType === "student" && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="major">Major</Label>
+                        <Input
+                          id="major"
+                          placeholder="Computer Science"
+                          value={major}
+                          onChange={(e) => setMajor(e.target.value)}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="graduation-year">Expected Graduation Year</Label>
+                        <Input
+                          id="graduation-year"
+                          placeholder="2026"
+                          value={graduationYear}
+                          onChange={(e) => setGraduationYear(e.target.value)}
+                        />
+                      </div>
+                    </>
+                  )}
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="graduation-year">Expected Graduation Year</Label>
-                    <Input
-                      id="graduation-year"
-                      placeholder="2026"
-                      value={graduationYear}
-                      onChange={(e) => setGraduationYear(e.target.value)}
-                    />
-                  </div>
+                  {userType === "employer" && (
+                    <div className="mt-2 text-sm text-muted-foreground">
+                      <p>After creating your account, you'll be prompted to provide company details.</p>
+                    </div>
+                  )}
                 </CardContent>
                 
                 <CardFooter>

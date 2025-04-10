@@ -1,48 +1,108 @@
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Navbar } from "@/components/Navbar";
-import { ArrowRight, Briefcase } from "lucide-react";
+import { Briefcase, Search, GraduationCap, Building } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 
-const Index = () => {
+export default function Index() {
   const { user } = useAuth();
+  const [isEmployer, setIsEmployer] = useState(false);
   
+  useEffect(() => {
+    if (user) {
+      checkIfEmployer();
+    }
+  }, [user]);
+  
+  const checkIfEmployer = async () => {
+    const { data } = await supabase
+      .from('employers')
+      .select('id')
+      .eq('user_id', user?.id);
+      
+    setIsEmployer(!!data && data.length > 0);
+  };
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
+    <div className="flex flex-col min-h-screen">
+      <header className="w-full border-b bg-white py-4">
+        <div className="container flex justify-between items-center">
+          <Link to="/" className="flex items-center gap-2">
+            <Briefcase className="h-5 w-5 text-job-blue" />
+            <span className="font-bold text-xl text-job-blue">CampusJobs</span>
+          </Link>
+          
+          <nav className="hidden md:flex items-center gap-6">
+            <Link to="/jobs" className="text-gray-600 hover:text-gray-900">Browse Jobs</Link>
+            {user ? (
+              <>
+                <Link to="/dashboard" className="text-gray-600 hover:text-gray-900">Dashboard</Link>
+                {isEmployer ? (
+                  <Link to="/employer/dashboard" className="text-gray-600 hover:text-gray-900">
+                    Employer Dashboard
+                  </Link>
+                ) : (
+                  <Link to="/employer/register" className="text-gray-600 hover:text-gray-900">
+                    For Employers
+                  </Link>
+                )}
+              </>
+            ) : (
+              <Link to="/auth" className="text-gray-600 hover:text-gray-900">For Employers</Link>
+            )}
+          </nav>
+          
+          <div className="flex items-center gap-4">
+            {user ? (
+              <Link to="/dashboard">
+                <Button>My Dashboard</Button>
+              </Link>
+            ) : (
+              <Link to="/auth">
+                <Button>Sign In</Button>
+              </Link>
+            )}
+          </div>
+        </div>
+      </header>
       
       <main className="flex-1">
-        <section className="py-20 md:py-32 bg-gradient-to-b from-white to-gray-50">
-          <div className="container flex flex-col items-center text-center">
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-              Find Your Perfect Campus Job
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mb-10">
-              Connecting university students with the best job opportunities on and around campus.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4">
-              {user ? (
-                <Link to="/dashboard">
-                  <Button size="lg" className="gap-2">
-                    Go to Dashboard
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-              ) : (
-                <Link to="/auth">
-                  <Button size="lg" className="gap-2">
-                    Sign Up Now
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-              )}
-              <Link to="/jobs">
-                <Button variant="outline" size="lg">
-                  Browse Jobs
-                </Button>
-              </Link>
+        <section className="py-20 bg-gradient-to-b from-blue-50 to-white">
+          <div className="container">
+            <div className="flex flex-col md:flex-row items-center">
+              <div className="md:w-1/2 mb-10 md:mb-0 md:pr-10">
+                <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4">
+                  Find Your Perfect Campus Job
+                </h1>
+                <p className="text-xl text-gray-600 mb-8">
+                  Connect with the best employment opportunities at your university.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Link to="/jobs">
+                    <Button size="lg" className="w-full sm:w-auto">
+                      <Search className="mr-2 h-5 w-5" />
+                      Browse Jobs
+                    </Button>
+                  </Link>
+                  {!user && (
+                    <Link to="/auth">
+                      <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                        Sign Up
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              </div>
+              <div className="md:w-1/2">
+                <img 
+                  src="/placeholder.svg" 
+                  alt="Campus Jobs" 
+                  className="w-full h-auto rounded-lg shadow-xl"
+                  style={{ maxWidth: "500px" }}
+                />
+              </div>
             </div>
           </div>
         </section>
@@ -50,30 +110,35 @@ const Index = () => {
         <section className="py-16 bg-white">
           <div className="container">
             <h2 className="text-3xl font-bold text-center mb-12">How It Works</h2>
-            
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 bg-job-blue/10 rounded-full flex items-center justify-center mb-4">
-                  <span className="text-job-blue font-bold text-xl">1</span>
+                <div className="bg-blue-100 p-4 rounded-full mb-4">
+                  <Search className="h-8 w-8 text-job-blue" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">Create an Account</h3>
-                <p className="text-muted-foreground">Sign up with your university email to get started and complete your profile.</p>
+                <h3 className="text-xl font-semibold mb-2">Find Opportunities</h3>
+                <p className="text-gray-600">
+                  Browse through a curated list of on-campus job opportunities.
+                </p>
               </div>
               
               <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 bg-job-blue/10 rounded-full flex items-center justify-center mb-4">
-                  <span className="text-job-blue font-bold text-xl">2</span>
+                <div className="bg-blue-100 p-4 rounded-full mb-4">
+                  <GraduationCap className="h-8 w-8 text-job-blue" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">Browse Opportunities</h3>
-                <p className="text-muted-foreground">Explore job listings tailored for university students on and around campus.</p>
+                <h3 className="text-xl font-semibold mb-2">Apply with Ease</h3>
+                <p className="text-gray-600">
+                  Submit your applications directly through our platform.
+                </p>
               </div>
               
               <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 bg-job-blue/10 rounded-full flex items-center justify-center mb-4">
-                  <span className="text-job-blue font-bold text-xl">3</span>
+                <div className="bg-blue-100 p-4 rounded-full mb-4">
+                  <Building className="h-8 w-8 text-job-blue" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">Apply and Track</h3>
-                <p className="text-muted-foreground">Submit applications directly through the platform and track your application status.</p>
+                <h3 className="text-xl font-semibold mb-2">For Employers</h3>
+                <p className="text-gray-600">
+                  Post job opportunities and find talented students for your positions.
+                </p>
               </div>
             </div>
           </div>
@@ -81,112 +146,95 @@ const Index = () => {
         
         <section className="py-16 bg-gray-50">
           <div className="container">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-              <div className="md:w-1/2">
-                <h2 className="text-3xl font-bold mb-4">Find Jobs That Fit Your Schedule</h2>
-                <p className="text-lg text-muted-foreground mb-6">
-                  Balance your studies with work opportunities that accommodate your class schedule. 
-                  From part-time roles to internships, find positions that help you gain valuable experience.
+            <div className="flex flex-col md:flex-row items-center justify-between">
+              <div className="md:w-1/2 mb-10 md:mb-0">
+                <h2 className="text-3xl font-bold mb-4">
+                  Are you an employer looking to hire students?
+                </h2>
+                <p className="text-xl text-gray-600 mb-8">
+                  Post your job opportunities and connect with talented students on campus.
                 </p>
-                <Link to="/jobs">
-                  <Button className="gap-2">
-                    Explore Jobs
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
+                {user ? (
+                  isEmployer ? (
+                    <Link to="/employer/dashboard">
+                      <Button size="lg">
+                        Go to Employer Dashboard
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Link to="/employer/register">
+                      <Button size="lg">
+                        Register as an Employer
+                      </Button>
+                    </Link>
+                  )
+                ) : (
+                  <Link to="/auth">
+                    <Button size="lg">
+                      Sign Up as an Employer
+                    </Button>
+                  </Link>
+                )}
               </div>
-              
-              <div className="md:w-1/2 bg-white p-6 rounded-lg border">
-                <div className="space-y-4">
-                  <div className="p-4 bg-job-blue/5 rounded-lg border border-job-blue/10">
-                    <h3 className="font-semibold mb-1">Research Assistant</h3>
-                    <p className="text-sm text-muted-foreground">Computer Science Department • Part-time</p>
-                  </div>
-                  
-                  <div className="p-4 bg-job-blue/5 rounded-lg border border-job-blue/10">
-                    <h3 className="font-semibold mb-1">Campus Tour Guide</h3>
-                    <p className="text-sm text-muted-foreground">Admissions Office • Flexible Hours</p>
-                  </div>
-                  
-                  <div className="p-4 bg-job-blue/5 rounded-lg border border-job-blue/10">
-                    <h3 className="font-semibold mb-1">Marketing Intern</h3>
-                    <p className="text-sm text-muted-foreground">University Communications • Internship</p>
-                  </div>
-                </div>
+              <div className="md:w-5/12">
+                <img 
+                  src="/placeholder.svg"
+                  alt="For Employers" 
+                  className="w-full h-auto rounded-lg shadow-lg"
+                />
               </div>
-            </div>
-          </div>
-        </section>
-        
-        <section className="py-16 bg-white">
-          <div className="container text-center">
-            <h2 className="text-3xl font-bold mb-4">Ready to Find Your Next Opportunity?</h2>
-            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Join thousands of students who have found valuable work experience through CampusJobs.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              {user ? (
-                <Link to="/dashboard">
-                  <Button size="lg">Go to Dashboard</Button>
-                </Link>
-              ) : (
-                <Link to="/auth">
-                  <Button size="lg">Get Started</Button>
-                </Link>
-              )}
             </div>
           </div>
         </section>
       </main>
       
-      <footer className="bg-gray-900 text-gray-300 py-12">
+      <footer className="bg-gray-800 text-white py-12">
         <div className="container">
-          <div className="flex flex-col md:flex-row justify-between gap-8">
-            <div className="md:w-1/3">
-              <div className="flex items-center gap-2 mb-4">
+          <div className="flex flex-col md:flex-row justify-between">
+            <div className="mb-8 md:mb-0">
+              <Link to="/" className="flex items-center gap-2 mb-4">
                 <Briefcase className="h-5 w-5 text-white" />
                 <span className="font-bold text-xl text-white">CampusJobs</span>
-              </div>
-              <p className="text-gray-400 mb-4">
-                Connecting university students with meaningful employment opportunities.
+              </Link>
+              <p className="text-gray-400 max-w-md">
+                Connecting students with quality employment opportunities on campus.
               </p>
             </div>
             
-            <div>
-              <h3 className="font-semibold text-white mb-4">Quick Links</h3>
-              <ul className="space-y-2">
-                <li><Link to="/jobs" className="hover:text-white transition-colors">Browse Jobs</Link></li>
-                <li><Link to="/auth" className="hover:text-white transition-colors">Sign In</Link></li>
-                <li><Link to="/auth?tab=signup" className="hover:text-white transition-colors">Create Account</Link></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="font-semibold text-white mb-4">Resources</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Resume Tips</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Interview Prep</a></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="font-semibold text-white mb-4">Legal</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
-              </ul>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+              <div>
+                <h3 className="font-semibold text-lg mb-4">For Students</h3>
+                <ul className="space-y-2">
+                  <li><Link to="/jobs" className="text-gray-400 hover:text-white">Browse Jobs</Link></li>
+                  <li><Link to="/dashboard" className="text-gray-400 hover:text-white">Your Applications</Link></li>
+                  <li><Link to="/profile" className="text-gray-400 hover:text-white">Profile</Link></li>
+                </ul>
+              </div>
+              
+              <div>
+                <h3 className="font-semibold text-lg mb-4">For Employers</h3>
+                <ul className="space-y-2">
+                  <li><Link to="/employer/register" className="text-gray-400 hover:text-white">Post a Job</Link></li>
+                  <li><Link to="/employer/dashboard" className="text-gray-400 hover:text-white">Manage Listings</Link></li>
+                </ul>
+              </div>
+              
+              <div>
+                <h3 className="font-semibold text-lg mb-4">Company</h3>
+                <ul className="space-y-2">
+                  <li><a href="#" className="text-gray-400 hover:text-white">About Us</a></li>
+                  <li><a href="#" className="text-gray-400 hover:text-white">Contact</a></li>
+                  <li><a href="#" className="text-gray-400 hover:text-white">Privacy Policy</a></li>
+                </ul>
+              </div>
             </div>
           </div>
           
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500">
-            <p>© {new Date().getFullYear()} CampusJobs. All rights reserved.</p>
+          <div className="border-t border-gray-700 mt-12 pt-8 text-center text-gray-400">
+            <p>&copy; {new Date().getFullYear()} CampusJobs. All rights reserved.</p>
           </div>
         </div>
       </footer>
     </div>
   );
-};
-
-export default Index;
+}
