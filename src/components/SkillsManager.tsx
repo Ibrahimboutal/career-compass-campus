@@ -39,7 +39,9 @@ export function SkillsManager({ userId, initialSkills, onUpdate }: SkillsManager
       
       const { error } = await supabase
         .from('profiles')
-        .update({ skills: updatedSkills })
+        .update({ 
+          skills: updatedSkills 
+        })
         .eq('id', userId);
       
       if (error) throw error;
@@ -67,7 +69,9 @@ export function SkillsManager({ userId, initialSkills, onUpdate }: SkillsManager
       
       const { error } = await supabase
         .from('profiles')
-        .update({ skills: updatedSkills })
+        .update({ 
+          skills: updatedSkills 
+        })
         .eq('id', userId);
       
       if (error) throw error;

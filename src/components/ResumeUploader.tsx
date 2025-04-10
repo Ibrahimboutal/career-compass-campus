@@ -67,7 +67,9 @@ export function ResumeUploader({ userId, existingResume, onUploadComplete }: Res
       // Update the profile with the resume URL
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ resume_url: publicUrl })
+        .update({ 
+          resume_url: publicUrl 
+        })
         .eq('id', userId);
       
       if (updateError) throw updateError;

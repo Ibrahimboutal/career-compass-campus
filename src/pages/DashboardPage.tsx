@@ -28,7 +28,7 @@ interface Application {
   job: Job;
 }
 
-// Define user profile type
+// Define user profile type with all the required fields
 interface Profile {
   id: string;
   name: string | null;
