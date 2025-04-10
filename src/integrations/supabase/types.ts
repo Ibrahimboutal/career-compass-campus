@@ -110,6 +110,8 @@ export type Database = {
           id: string
           major: string | null
           name: string | null
+          resume_url: string | null
+          skills: string[] | null
           updated_at: string
         }
         Insert: {
@@ -119,6 +121,8 @@ export type Database = {
           id: string
           major?: string | null
           name?: string | null
+          resume_url?: string | null
+          skills?: string[] | null
           updated_at?: string
         }
         Update: {
@@ -128,6 +132,8 @@ export type Database = {
           id?: string
           major?: string | null
           name?: string | null
+          resume_url?: string | null
+          skills?: string[] | null
           updated_at?: string
         }
         Relationships: []

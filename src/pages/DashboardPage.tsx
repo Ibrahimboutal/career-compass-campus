@@ -17,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Job } from "@/data/types";
-import { mapSupabaseJobToJob, mapSupabaseJobsToJobs, mapApplicationStatus, mapSupabaseApplicationToApplication } from "@/utils/mappers";
+import { mapSupabaseJobToJob, mapSupabaseJobsToJobs, mapApplicationStatus } from "@/utils/mappers";
 
 // Define application type as used in this component
 interface Application {
@@ -85,8 +85,13 @@ const DashboardPage = () => {
         
         if (profileData) {
           // Ensure skills is an array
-          const profileWithSkills = {
-            ...profileData,
+          const profileWithSkills: Profile = {
+            id: profileData.id,
+            name: profileData.name,
+            email: profileData.email,
+            major: profileData.major,
+            graduation_year: profileData.graduation_year,
+            resume_url: profileData.resume_url,
             skills: profileData.skills || []
           };
           setProfile(profileWithSkills);
@@ -165,8 +170,13 @@ const DashboardPage = () => {
       if (profileError) throw profileError;
       
       if (profileData) {
-        const profileWithSkills = {
-          ...profileData,
+        const profileWithSkills: Profile = {
+          id: profileData.id,
+          name: profileData.name,
+          email: profileData.email,
+          major: profileData.major,
+          graduation_year: profileData.graduation_year,
+          resume_url: profileData.resume_url,
           skills: profileData.skills || []
         };
         setProfile(profileWithSkills);
@@ -433,7 +443,7 @@ const DashboardPage = () => {
                           {profile && (
                             <ProfileForm 
                               initialData={{ 
-                                
+                                id: profile.id,
                                 name: profile.name || "", 
                                 email: profile.email || "", 
                                 major: profile.major || "", 
@@ -490,7 +500,7 @@ const DashboardPage = () => {
                                 </p>
                               </div>
                               <div>
-                                {user && (
+                                {user && profile && (
                                   <ResumeUploader
                                     userId={user.id}
                                     existingResume={profile.resume_url}
@@ -509,7 +519,7 @@ const DashboardPage = () => {
                                 <p className="text-sm text-gray-500">Upload your resume to apply more easily</p>
                               </div>
                               <div>
-                                {user && (
+                                {user && profile && (
                                   <ResumeUploader
                                     userId={user.id}
                                     onUploadComplete={(url) => {

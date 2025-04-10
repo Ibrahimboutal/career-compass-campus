@@ -19,7 +19,7 @@ const profileSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 interface ProfileFormProps {
-  initialData: ProfileFormValues;
+  initialData: ProfileFormValues & { id?: string };
   onSuccess: () => void;
 }
 
