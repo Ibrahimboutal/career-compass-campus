@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -130,11 +129,16 @@ export default function EmployerJobApplicationsPage() {
       }
       
       // Get total count for pagination
-      const { count, error: countError } = await supabase
+      let countQuery = supabase
         .from('applications')
         .select('id', { count: 'exact' })
-        .eq('job_id', jobId)
-        .eq(statusFilter ? 'status' : 'id', statusFilter || 'id');
+        .eq('job_id', jobId);
+        
+      if (statusFilter) {
+        countQuery = countQuery.eq('status', statusFilter);
+      }
+      
+      const { count, error: countError } = await countQuery;
       
       if (countError) {
         throw countError;

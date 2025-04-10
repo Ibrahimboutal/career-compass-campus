@@ -89,3 +89,25 @@ BEGIN
   RETURN updated_employer;
 END;
 $$;
+
+-- Function to add notes column to applications table if it doesn't exist
+CREATE OR REPLACE FUNCTION public.add_notes_column_to_applications()
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  -- Check if notes column exists
+  IF NOT EXISTS (
+    SELECT 1 
+    FROM information_schema.columns 
+    WHERE table_name = 'applications' 
+    AND column_name = 'notes'
+    AND table_schema = 'public'
+  ) THEN
+    -- Add notes column if it doesn't exist
+    EXECUTE 'ALTER TABLE public.applications ADD COLUMN notes TEXT DEFAULT NULL';
+  END IF;
+END;
+$$;
+
