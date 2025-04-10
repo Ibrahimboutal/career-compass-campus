@@ -50,41 +50,9 @@ export default function EmployerApplicationDetailPage() {
   
   useEffect(() => {
     if (user && jobId && applicationId) {
-      // First check if notes column exists, if not create it
-      checkAndAddNotesColumn().then(() => {
-        loadApplicationDetails();
-      });
+      loadApplicationDetails();
     }
   }, [user, jobId, applicationId]);
-  
-  // Function to check if notes column exists and add it if it doesn't
-  const checkAndAddNotesColumn = async () => {
-    try {
-      // Try to select the notes column to see if it exists
-      const { error } = await supabase
-        .from('applications')
-        .select('notes')
-        .limit(1);
-      
-      // If there's an error about the column not existing, add it
-      if (error && error.message.includes("column 'notes' does not exist")) {
-        console.log("Notes column doesn't exist. Adding it...");
-        
-        // Use SQL to add the notes column
-        // This requires admin privileges, so it might not work in all environments
-        // If this doesn't work, you would need to add the column through the Supabase dashboard
-        const { error: alterError } = await supabase.rpc('add_notes_column_to_applications');
-        
-        if (alterError) {
-          console.error("Failed to add notes column:", alterError);
-          // Proceed anyway, as we'll handle missing column case
-        }
-      }
-    } catch (error) {
-      console.error("Error checking for notes column:", error);
-      // Continue anyway as we'll handle the missing column in the code
-    }
-  };
   
   const loadApplicationDetails = async () => {
     try {
@@ -121,13 +89,14 @@ export default function EmployerApplicationDetailPage() {
         return;
       }
       
-      // Now get the application details with joins, but handle the case where notes column might not exist
+      // Now get the application details with joins
       const { data, error } = await supabase
         .from('applications')
         .select(`
           id, 
           status, 
           applied_date,
+          notes,
           profiles!applications_user_id_fkey (
             id, 
             name, 
@@ -161,28 +130,11 @@ export default function EmployerApplicationDetailPage() {
         return;
       }
       
-      // Try to get the notes separately to handle if the column doesn't exist
-      let notesData = null;
-      try {
-        const { data: notesResult, error: notesError } = await supabase
-          .from('applications')
-          .select('notes')
-          .eq('id', applicationId)
-          .single();
-          
-        if (!notesError && notesResult) {
-          notesData = notesResult.notes;
-        }
-      } catch (noteErr) {
-        console.error("Error fetching notes:", noteErr);
-        // Continue without notes
-      }
-      
       const applicationDetail: ApplicationDetail = {
         id: data.id,
         status: data.status as "Applied" | "Under Review" | "Interview" | "Offered" | "Rejected",
         applied_date: data.applied_date,
-        notes: notesData, // Set notes from separate query or null if not available
+        notes: data.notes,
         user: {
           id: data.profiles.id,
           name: data.profiles.name,
@@ -222,42 +174,12 @@ export default function EmployerApplicationDetailPage() {
     try {
       setSavingNotes(true);
       
-      // First check if the notes column exists
-      try {
-        // Try updating without notes first to see if there's an error
-        const { error } = await supabase
-          .from('applications')
-          .update({ status: application.status })
-          .eq('id', application.id);
-          
-        if (!error) {
-          // Now try to update with notes
-          try {
-            const { error: notesError } = await supabase
-              .from('applications')
-              .update({ 
-                notes: notes 
-              })
-              .eq('id', application.id);
-              
-            if (notesError) {
-              // If there's an error, it might be because the notes column doesn't exist
-              console.error("Failed to save notes:", notesError);
-              // Notify the user that notes couldn't be saved
-              toast({
-                title: "Notes Not Saved",
-                description: "The notes feature is currently unavailable. Please contact support.",
-                variant: "destructive",
-              });
-              return;
-            }
-          } catch (err) {
-            console.error("Error saving notes:", err);
-          }
-        }
-      } catch (err) {
-        console.error("Error checking applications table:", err);
-      }
+      const { error } = await supabase
+        .from('applications')
+        .update({ notes: notes })
+        .eq('id', application.id);
+        
+      if (error) throw error;
       
       toast({
         title: "Notes Saved",
