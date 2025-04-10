@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +8,8 @@ import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/ca
 import { Button } from "@/components/ui/button";
 import { Job } from "@/data/types";
 import { ArrowLeft } from "lucide-react";
+import { useEmployers } from "@/hooks/useEmployers";
+import { mapSupabaseJobToJob } from "@/utils/mappers";
 
 export default function JobEditPage() {
   const { id } = useParams<{ id: string }>();
@@ -18,6 +19,7 @@ export default function JobEditPage() {
   const [job, setJob] = useState<Job | null>(null);
   const [employer, setEmployer] = useState<{ id: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { getEmployerByUserId } = useEmployers();
 
   useEffect(() => {
     if (user && id) {
@@ -30,27 +32,20 @@ export default function JobEditPage() {
       setIsLoading(true);
       
       // First get the employer id
-      const { data: employerData, error: employerError } = await supabase
-        .from("employers")
-        .select("id")
-        .eq("user_id", user?.id)
-        .single();
+      const employerData = await getEmployerByUserId(user?.id || '');
       
-      if (employerError) {
-        if (employerError.code === "PGRST116") {
-          // No employer profile found
-          toast({
-            title: "Access Denied",
-            description: "You need to register as an employer first",
-            variant: "destructive",
-          });
-          navigate("/employer/register");
-          return;
-        }
-        throw employerError;
+      if (!employerData) {
+        // No employer profile found
+        toast({
+          title: "Access Denied",
+          description: "You need to register as an employer first",
+          variant: "destructive",
+        });
+        navigate("/employer/register");
+        return;
       }
       
-      setEmployer(employerData);
+      setEmployer({ id: employerData.id });
       
       // Now fetch the job data
       const { data: jobData, error: jobError } = await supabase
@@ -73,7 +68,7 @@ export default function JobEditPage() {
         throw jobError;
       }
       
-      setJob(jobData as Job);
+      setJob(mapSupabaseJobToJob(jobData));
     } catch (error: any) {
       toast({
         title: "Error",

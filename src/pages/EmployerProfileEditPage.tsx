@@ -1,7 +1,5 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -12,16 +10,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-
-interface Employer {
-  id: string;
-  company_name: string;
-  industry: string | null;
-  company_size: string | null;
-  website: string | null;
-  company_description: string | null;
-  logo_url: string | null;
-}
+import { Employer } from "@/data/types";
+import { useEmployers } from "@/hooks/useEmployers";
 
 const employerFormSchema = z.object({
   companyName: z.string().min(2, "Company name must be at least 2 characters"),
@@ -40,6 +30,7 @@ export default function EmployerProfileEditPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { getEmployerByUserId, updateEmployer } = useEmployers();
   
   const form = useForm<EmployerFormValues>({
     resolver: zodResolver(employerFormSchema),
@@ -62,30 +53,23 @@ export default function EmployerProfileEditPage() {
     try {
       setIsLoading(true);
       
-      const { data, error } = await supabase
-        .from("employers")
-        .select("*")
-        .eq("user_id", user?.id)
-        .single();
+      const employerData = await getEmployerByUserId(user?.id || '');
       
-      if (error) {
-        if (error.code === "PGRST116") {
-          // No employer profile found, redirect to registration
-          navigate("/employer/register");
-          return;
-        }
-        throw error;
+      if (!employerData) {
+        // No employer profile found, redirect to registration
+        navigate("/employer/register");
+        return;
       }
       
-      setEmployer(data as Employer);
+      setEmployer(employerData);
       
       // Set form values
       form.reset({
-        companyName: data.company_name,
-        industry: data.industry || "",
-        companySize: data.company_size || "",
-        website: data.website || "",
-        companyDescription: data.company_description || "",
+        companyName: employerData.company_name,
+        industry: employerData.industry || "",
+        companySize: employerData.company_size || "",
+        website: employerData.website || "",
+        companyDescription: employerData.company_description || "",
       });
     } catch (error: any) {
       toast({
@@ -110,18 +94,15 @@ export default function EmployerProfileEditPage() {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
-        .from("employers")
-        .update({
-          company_name: values.companyName,
-          industry: values.industry || null,
-          company_size: values.companySize || null,
-          website: values.website || null,
-          company_description: values.companyDescription || null,
-        })
-        .eq("id", employer.id);
+      const result = await updateEmployer(employer.id, {
+        company_name: values.companyName,
+        industry: values.industry || null,
+        company_size: values.companySize || null,
+        website: values.website || null,
+        company_description: values.companyDescription || null,
+      });
 
-      if (error) throw error;
+      if (!result) throw new Error("Failed to update employer profile");
 
       toast({
         title: "Success",

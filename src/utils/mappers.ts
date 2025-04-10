@@ -1,5 +1,5 @@
 
-import { Job, Application } from "@/data/types";
+import { Job, Application, Employer } from "@/data/types";
 
 // Map Supabase job structure to our application Job type
 export const mapSupabaseJobToJob = (supabaseJob: any): Job => {
@@ -14,7 +14,8 @@ export const mapSupabaseJobToJob = (supabaseJob: any): Job => {
     postedDate: supabaseJob.posted_date,
     deadline: supabaseJob.deadline,
     salary: supabaseJob.salary,
-    logo: supabaseJob.logo
+    logo: supabaseJob.logo,
+    employerId: supabaseJob.employer_id
   };
 };
 
@@ -44,4 +45,20 @@ export const mapApplicationStatus = (status: string): "Applied" | "Under Review"
   
   // Default to "Applied" if the status is not valid
   return "Applied";
+};
+
+// Map Supabase employer to our Employer type
+export const mapSupabaseEmployerToEmployer = (supabaseEmployer: any): Employer => {
+  return {
+    id: supabaseEmployer.id,
+    user_id: supabaseEmployer.user_id,
+    company_name: supabaseEmployer.company_name,
+    industry: supabaseEmployer.industry,
+    company_size: supabaseEmployer.company_size,
+    website: supabaseEmployer.website,
+    company_description: supabaseEmployer.company_description,
+    logo_url: supabaseEmployer.logo_url,
+    created_at: supabaseEmployer.created_at,
+    updated_at: supabaseEmployer.updated_at
+  };
 };

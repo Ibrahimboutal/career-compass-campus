@@ -11,6 +11,7 @@ export interface Job {
   deadline: string;
   salary?: string;
   logo?: string;
+  employerId?: string;
 }
 
 export interface Application {
@@ -27,4 +28,17 @@ export interface User {
   major: string;
   graduationYear: string;
   applications: Application[];
+}
+
+export interface Employer {
+  id: string;
+  user_id: string;
+  company_name: string;
+  industry: string | null;
+  company_size: string | null;
+  website: string | null;
+  company_description: string | null;
+  logo_url: string | null;
+  created_at: string;
+  updated_at: string;
 }

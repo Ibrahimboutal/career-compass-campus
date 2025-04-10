@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,17 +10,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { JobForm } from "@/components/JobForm";
 import { Briefcase, PlusCircle, Building, UserRound } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Job } from "@/data/types";
-
-interface Employer {
-  id: string;
-  company_name: string;
-  industry: string | null;
-  company_size: string | null;
-  website: string | null;
-  company_description: string | null;
-  logo_url: string | null;
-}
+import { Job, Employer } from "@/data/types";
+import { useEmployers } from "@/hooks/useEmployers";
+import { mapSupabaseJobsToJobs } from "@/utils/mappers";
 
 export default function EmployerDashboardPage() {
   const { user } = useAuth();
@@ -31,6 +22,7 @@ export default function EmployerDashboardPage() {
   const [applicationsCount, setApplicationsCount] = useState<Record<string, number>>({});
   const [isJobDialogOpen, setIsJobDialogOpen] = useState(false);
   const { toast } = useToast();
+  const { getEmployerByUserId } = useEmployers();
 
   useEffect(() => {
     if (user) {
@@ -43,22 +35,15 @@ export default function EmployerDashboardPage() {
       setIsLoading(true);
       
       // Fetch employer profile
-      const { data: employerData, error: employerError } = await supabase
-        .from("employers")
-        .select("*")
-        .eq("user_id", user?.id)
-        .single();
+      const employerData = await getEmployerByUserId(user?.id || '');
       
-      if (employerError) {
-        if (employerError.code === "PGRST116") {
-          // No employer profile found, redirect to registration
-          window.location.href = "/employer/register";
-          return;
-        }
-        throw employerError;
+      if (!employerData) {
+        // No employer profile found, redirect to registration
+        window.location.href = "/employer/register";
+        return;
       }
       
-      setEmployer(employerData as Employer);
+      setEmployer(employerData);
       
       // Fetch jobs posted by this employer
       const { data: jobsData, error: jobsError } = await supabase
@@ -69,10 +54,10 @@ export default function EmployerDashboardPage() {
       
       if (jobsError) throw jobsError;
       
-      setJobs(jobsData as Job[]);
+      setJobs(mapSupabaseJobsToJobs(jobsData || []));
       
       // Fetch application counts for each job
-      const jobIds = jobsData.map(job => job.id);
+      const jobIds = jobsData?.map(job => job.id) || [];
       if (jobIds.length > 0) {
         const { data: applicationsData, error: applicationsError } = await supabase
           .from("applications")
@@ -211,7 +196,7 @@ export default function EmployerDashboardPage() {
                       <div>
                         <h3 className="text-lg font-semibold">{job.title}</h3>
                         <p className="text-sm text-muted-foreground">
-                          {job.location} • Posted on {new Date(job.posted_date).toLocaleDateString()}
+                          {job.location} • Posted on {new Date(job.postedDate).toLocaleDateString()}
                         </p>
                       </div>
                       <Badge>{job.type}</Badge>

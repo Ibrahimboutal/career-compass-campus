@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useAuth } from "@/contexts/AuthContext";
+import { useEmployers } from "@/hooks/useEmployers";
 
 const employerFormSchema = z.object({
   companyName: z.string().min(2, "Company name must be at least 2 characters"),
@@ -26,6 +26,7 @@ type EmployerFormValues = z.infer<typeof employerFormSchema>;
 export function EmployerRegistrationForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
+  const { createEmployer } = useEmployers();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -52,16 +53,17 @@ export function EmployerRegistrationForm() {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from("employers").insert({
+      const result = await createEmployer({
         user_id: user.id,
         company_name: values.companyName,
         industry: values.industry || null,
         company_size: values.companySize || null,
         website: values.website || null,
         company_description: values.companyDescription || null,
+        logo_url: null
       });
 
-      if (error) throw error;
+      if (!result) throw new Error("Failed to create employer profile");
 
       toast({
         title: "Success",

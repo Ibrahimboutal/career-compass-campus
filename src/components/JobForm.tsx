@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +13,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Job } from "@/data/types";
+import { useEmployers } from "@/hooks/useEmployers";
 
 const jobFormSchema = z.object({
   title: z.string().min(2, "Job title must be at least 2 characters"),
@@ -39,8 +39,15 @@ export function JobForm({ job, employerId, onSuccess }: JobFormProps) {
   const [requirements, setRequirements] = useState<string[]>(job?.requirements || []);
   const [newRequirement, setNewRequirement] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [companyName, setCompanyName] = useState<string>("");
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (employerId) {
+      getEmployerDetails(employerId);
+    }
+  }, [employerId]);
 
   const form = useForm<JobFormValues>({
     resolver: zodResolver(jobFormSchema),
@@ -86,6 +93,7 @@ export function JobForm({ job, employerId, onSuccess }: JobFormProps) {
         requirements: requirements,
         deadline: new Date(values.deadline).toISOString(),
         employer_id: employerId,
+        company: companyName || "Unknown Company",
       };
 
       if (job) {
@@ -105,10 +113,7 @@ export function JobForm({ job, employerId, onSuccess }: JobFormProps) {
         // Create new job
         const { error } = await supabase
           .from("jobs")
-          .insert({
-            ...jobData,
-            company: (await getEmployerDetails(employerId))?.company_name || "",
-          });
+          .insert(jobData);
 
         if (error) throw error;
 
@@ -135,18 +140,21 @@ export function JobForm({ job, employerId, onSuccess }: JobFormProps) {
   };
 
   const getEmployerDetails = async (employerId: string) => {
-    const { data, error } = await supabase
-      .from("employers")
-      .select("*")
-      .eq("id", employerId)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .rpc('get_employer_by_id', { employer_id_param: employerId });
 
-    if (error) {
-      console.error("Error fetching employer details:", error);
-      return null;
+      if (error) {
+        console.error("Error fetching employer details:", error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        setCompanyName(data[0].company_name);
+      }
+    } catch (error) {
+      console.error("Failed to fetch employer details:", error);
     }
-
-    return data;
   };
 
   return (
