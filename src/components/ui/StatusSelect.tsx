@@ -34,22 +34,23 @@ export function StatusSelect({
   triggerClassName
 }: StatusSelectProps) {
   return (
-    <Select 
-      value={value} 
-      onValueChange={onValueChange}
-      disabled={disabled}
-      className={className}
-    >
-      <SelectTrigger className={triggerClassName}>
-        <SelectValue placeholder="Select status" />
-      </SelectTrigger>
-      <SelectContent>
-        {STATUS_OPTIONS.map((status) => (
-          <SelectItem key={status} value={status}>
-            {status}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <div className={className}>
+      <Select 
+        value={value} 
+        onValueChange={onValueChange}
+        disabled={disabled}
+      >
+        <SelectTrigger className={triggerClassName}>
+          <SelectValue placeholder="Select status" />
+        </SelectTrigger>
+        <SelectContent>
+          {STATUS_OPTIONS.map((status) => (
+            <SelectItem key={status} value={status}>
+              {status}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 }
