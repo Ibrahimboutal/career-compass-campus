@@ -1,9 +1,11 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { ChatProvider } from "@/contexts/ChatContext";
 import Index from "./pages/Index";
 import AuthPage from "./pages/AuthPage";
 import JobsPage from "./pages/JobsPage";
@@ -11,6 +13,7 @@ import JobDetailPage from "./pages/JobDetailPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProfilePage from "./pages/ProfilePage";
 import SavedJobsPage from "./pages/SavedJobsPage";
+import MessagesPage from "./pages/MessagesPage";
 import EmployerDashboardPage from "./pages/EmployerDashboardPage";
 import EmployerRegistrationPage from "./pages/EmployerRegistrationPage";
 import EmployerProfileEditPage from "./pages/EmployerProfileEditPage";
@@ -66,6 +69,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <SavedJobsPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/messages" 
+        element={
+          <ProtectedRoute>
+            <MessagesPage />
           </ProtectedRoute>
         } 
       />
@@ -127,11 +138,13 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
+        <ChatProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </ChatProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
