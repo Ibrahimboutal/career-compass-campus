@@ -6,14 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Briefcase } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { SaveJobButton } from "./SaveJobButton";
 
 interface JobCardProps {
   job: Job;
   isApplied?: boolean;
+  isSaved?: boolean;
   className?: string;
+  onUnsave?: () => void;
 }
 
-export function JobCard({ job, isApplied = false, className }: JobCardProps) {
+export function JobCard({ job, isApplied = false, isSaved = false, className, onUnsave }: JobCardProps) {
   const formattedDate = new Date(job.postedDate).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
@@ -21,6 +24,13 @@ export function JobCard({ job, isApplied = false, className }: JobCardProps) {
   });
 
   const daysAgo = Math.floor((new Date().getTime() - new Date(job.postedDate).getTime()) / (1000 * 3600 * 24));
+
+  const handleSaveStatusChange = (newSavedStatus: boolean) => {
+    // If job was saved and is now unsaved, and we have an onUnsave callback, call it
+    if (!newSavedStatus && isSaved && onUnsave) {
+      onUnsave();
+    }
+  };
 
   return (
     <Card className={cn("job-card-shadow", className)}>
@@ -35,9 +45,12 @@ export function JobCard({ job, isApplied = false, className }: JobCardProps) {
               <p className="text-sm text-muted-foreground">{job.company}</p>
             </div>
           </div>
-          <Badge variant={job.type === "Internship" ? "secondary" : job.type === "Part-time" ? "outline" : "default"}>
-            {job.type}
-          </Badge>
+          <div className="flex gap-2">
+            <SaveJobButton jobId={job.id} onSaveStatusChange={handleSaveStatusChange} />
+            <Badge variant={job.type === "Internship" ? "secondary" : job.type === "Part-time" ? "outline" : "default"}>
+              {job.type}
+            </Badge>
+          </div>
         </div>
         
         <div className="mt-4 space-y-3">

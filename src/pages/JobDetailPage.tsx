@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
@@ -9,6 +8,7 @@ import { ArrowLeft, Briefcase, Building, Calendar, Clock, MapPin, Share } from "
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { JobApplyButton } from "@/components/JobApplyButton";
+import { SaveJobButton } from "@/components/SaveJobButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { Job } from "@/data/types";
 import { mapSupabaseJobToJob } from "@/utils/mappers";
@@ -147,9 +147,12 @@ const JobDetailPage = () => {
                       </div>
                     </div>
                   </div>
-                  <Button variant="outline" size="icon">
-                    <Share className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <SaveJobButton jobId={job.id} size="icon" />
+                    <Button variant="outline" size="icon">
+                      <Share className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
                 
                 <div className="mt-6">

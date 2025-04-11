@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
@@ -7,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ApplicationStatusBadge } from "@/components/ApplicationStatusBadge";
 import { JobCard } from "@/components/JobCard";
+import { SavedJobsCard } from "@/components/SavedJobsCard";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ProfileForm } from "@/components/ProfileForm";
@@ -271,20 +271,7 @@ const DashboardPage = () => {
                 </CardContent>
               </Card>
               
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Saved Jobs</CardTitle>
-                  <CardDescription>Jobs you've bookmarked</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <span className="text-3xl font-bold">0</span>
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link to="/saved-jobs">View all</Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <SavedJobsCard />
             </div>
             
             <div className="grid grid-cols-1 gap-6">

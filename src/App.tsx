@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +10,7 @@ import JobsPage from "./pages/JobsPage";
 import JobDetailPage from "./pages/JobDetailPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProfilePage from "./pages/ProfilePage";
+import SavedJobsPage from "./pages/SavedJobsPage";
 import EmployerDashboardPage from "./pages/EmployerDashboardPage";
 import EmployerRegistrationPage from "./pages/EmployerRegistrationPage";
 import EmployerProfileEditPage from "./pages/EmployerProfileEditPage";
@@ -58,6 +58,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/saved-jobs" 
+        element={
+          <ProtectedRoute>
+            <SavedJobsPage />
           </ProtectedRoute>
         } 
       />
