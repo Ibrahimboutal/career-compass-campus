@@ -1,15 +1,14 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 interface SkillsCardProps {
+  skills: string[];
   onSaveSkills: () => void;
 }
 
-export function SkillsCard({ onSaveSkills }: SkillsCardProps) {
+export function SkillsCard({ skills, onSaveSkills }: SkillsCardProps) {
   return (
     <Card className="mt-6">
       <CardHeader>
@@ -17,31 +16,25 @@ export function SkillsCard({ onSaveSkills }: SkillsCardProps) {
         <CardDescription>Add skills to highlight your expertise</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="skills">Skills</Label>
-            <Textarea 
-              id="skills" 
-              placeholder="Add your skills separated by commas, e.g. JavaScript, React, Data Analysis"
-              className="min-h-24"
-              defaultValue="JavaScript, React, HTML/CSS, Python, Git, UI/UX Design"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="interests">Interests</Label>
-            <Textarea 
-              id="interests" 
-              placeholder="Add your interests separated by commas, e.g. Web Development, AI, Project Management"
-              className="min-h-24"
-              defaultValue="Web Development, Artificial Intelligence, Mobile App Development, Data Visualization"
-            />
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-sm font-medium mb-2">Your Skills</h3>
+            <div className="flex flex-wrap gap-2">
+              {skills && skills.length > 0 ? (
+                skills.map((skill, index) => (
+                  <Badge key={index} variant="secondary">
+                    {skill}
+                  </Badge>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">No skills added yet. Click "Manage Skills" to add some.</p>
+              )}
+            </div>
           </div>
         </div>
       </CardContent>
       <CardFooter className="flex justify-end gap-3 border-t pt-4">
-        <Button variant="outline">Cancel</Button>
-        <Button onClick={onSaveSkills}>Save Changes</Button>
+        <Button onClick={onSaveSkills}>Manage Skills</Button>
       </CardFooter>
     </Card>
   );
