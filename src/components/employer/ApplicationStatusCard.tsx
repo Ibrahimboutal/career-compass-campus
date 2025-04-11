@@ -2,9 +2,10 @@
 import React from "react";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { ApplicationStatusBadge } from "@/components/ApplicationStatusBadge";
+import { InfoField } from "@/components/ui/InfoField";
+import { StatusSelect } from "@/components/ui/StatusSelect";
 import { Building, Clock } from "lucide-react";
 
 interface JobInfo {
@@ -42,42 +43,31 @@ export function ApplicationStatusCard({
         
         <div className="space-y-2">
           <Label>Update Status</Label>
-          <Select 
+          <StatusSelect 
             value={status} 
             onValueChange={onStatusChange}
             disabled={updatingStatus}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Applied">Applied</SelectItem>
-              <SelectItem value="Under Review">Under Review</SelectItem>
-              <SelectItem value="Interview">Interview</SelectItem>
-              <SelectItem value="Offered">Offered</SelectItem>
-              <SelectItem value="Rejected">Rejected</SelectItem>
-            </SelectContent>
-          </Select>
+          />
         </div>
         
         <Separator className="my-4" />
         
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Building className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">Job</span>
-          </div>
-          <p>{jobInfo.title}</p>
-          <p className="text-sm text-muted-foreground">{jobInfo.company}</p>
-        </div>
+        <InfoField
+          icon={Building}
+          label="Job"
+          value={
+            <div>
+              <p>{jobInfo.title}</p>
+              <p className="text-sm text-muted-foreground">{jobInfo.company}</p>
+            </div>
+          }
+        />
         
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">Applied On</span>
-          </div>
-          <p>{new Date(appliedDate).toLocaleDateString()}</p>
-        </div>
+        <InfoField
+          icon={Clock}
+          label="Applied On"
+          value={new Date(appliedDate).toLocaleDateString()}
+        />
       </CardContent>
     </Card>
   );

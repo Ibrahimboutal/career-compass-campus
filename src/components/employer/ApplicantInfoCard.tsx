@@ -2,6 +2,7 @@
 import React from "react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { InfoField } from "@/components/ui/InfoField";
 import { User, Mail, GraduationCap, Calendar, FileText } from "lucide-react";
 
 interface ApplicantInfo {
@@ -25,37 +26,29 @@ export function ApplicantInfoCard({ applicantInfo }: ApplicantInfoCardProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <User className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">Name</span>
-            </div>
-            <p>{applicantInfo.name || "Not provided"}</p>
-          </div>
+          <InfoField 
+            icon={User} 
+            label="Name" 
+            value={applicantInfo.name} 
+          />
           
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Mail className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">Email</span>
-            </div>
-            <p>{applicantInfo.email || "Not provided"}</p>
-          </div>
+          <InfoField 
+            icon={Mail} 
+            label="Email" 
+            value={applicantInfo.email} 
+          />
           
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <GraduationCap className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">Major</span>
-            </div>
-            <p>{applicantInfo.major || "Not provided"}</p>
-          </div>
+          <InfoField 
+            icon={GraduationCap} 
+            label="Major" 
+            value={applicantInfo.major} 
+          />
           
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">Graduation Year</span>
-            </div>
-            <p>{applicantInfo.graduation_year || "Not provided"}</p>
-          </div>
+          <InfoField 
+            icon={Calendar} 
+            label="Graduation Year" 
+            value={applicantInfo.graduation_year} 
+          />
         </div>
         
         {applicantInfo.skills && applicantInfo.skills.length > 0 && (

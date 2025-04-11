@@ -3,8 +3,8 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ApplicationStatusBadge } from "@/components/ApplicationStatusBadge";
+import { StatusSelect } from "@/components/ui/StatusSelect";
 import { UserRound, FileText } from "lucide-react";
 
 interface Application {
@@ -78,21 +78,11 @@ export function ApplicationsTable({ applications, jobId, onStatusChange }: Appli
                       </a>
                     </Button>
                   )}
-                  <Select
+                  <StatusSelect
                     value={application.status}
                     onValueChange={(value) => onStatusChange(application.id, value)}
-                  >
-                    <SelectTrigger className="h-8 w-[140px]">
-                      <SelectValue placeholder="Change Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Applied">Applied</SelectItem>
-                      <SelectItem value="Under Review">Under Review</SelectItem>
-                      <SelectItem value="Interview">Interview</SelectItem>
-                      <SelectItem value="Offered">Offered</SelectItem>
-                      <SelectItem value="Rejected">Rejected</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    triggerClassName="h-8 w-[140px]"
+                  />
                 </div>
               </TableCell>
             </TableRow>

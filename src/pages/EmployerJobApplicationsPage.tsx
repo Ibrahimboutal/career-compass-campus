@@ -1,12 +1,12 @@
 
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { ArrowLeft } from "lucide-react";
 import { JobSummaryCard } from "@/components/employer/JobSummaryCard";
 import { ApplicationsFilter } from "@/components/employer/ApplicationsFilter";
 import { ApplicationsTable } from "@/components/employer/ApplicationsTable";
 import { EmptyApplicationsState } from "@/components/employer/EmptyApplicationsState";
+import { PaginationControls } from "@/components/ui/PaginationControls";
 import { useJobApplications } from "@/hooks/useJobApplications";
 
 export default function EmployerJobApplicationsPage() {
@@ -75,63 +75,11 @@ export default function EmployerJobApplicationsPage() {
             />
           </div>
           
-          {totalPages > 1 && (
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious 
-                    href="#" 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (page > 1) setPage(page - 1);
-                    }}
-                    className={page <= 1 ? "pointer-events-none opacity-50" : ""}
-                  />
-                </PaginationItem>
-                
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .filter(p => Math.abs(p - page) < 2 || p === 1 || p === totalPages)
-                  .map((p, i, arr) => {
-                    // Add ellipsis
-                    if (i > 0 && p > arr[i - 1] + 1) {
-                      return (
-                        <PaginationItem key={`ellipsis-${p}`}>
-                          <span className="flex h-9 w-9 items-center justify-center">
-                            ...
-                          </span>
-                        </PaginationItem>
-                      );
-                    }
-                    
-                    return (
-                      <PaginationItem key={p}>
-                        <PaginationLink
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setPage(p);
-                          }}
-                          isActive={page === p}
-                        >
-                          {p}
-                        </PaginationLink>
-                      </PaginationItem>
-                    );
-                  })}
-                
-                <PaginationItem>
-                  <PaginationNext 
-                    href="#" 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (page < totalPages) setPage(page + 1);
-                    }}
-                    className={page >= totalPages ? "pointer-events-none opacity-50" : ""}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          )}
+          <PaginationControls
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+          />
         </>
       ) : (
         <EmptyApplicationsState statusFilter={statusFilter} />
