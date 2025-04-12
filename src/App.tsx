@@ -15,9 +15,6 @@ import ProfilePage from "./pages/ProfilePage";
 import SavedJobsPage from "./pages/SavedJobsPage";
 import MessagesPage from "./pages/MessagesPage";
 import ConnectionsPage from "./pages/ConnectionsPage";
-import EmployerDashboardPage from "./pages/EmployerDashboardPage";
-import EmployerRegistrationPage from "./pages/EmployerRegistrationPage";
-import EmployerProfileEditPage from "./pages/EmployerProfileEditPage";
 import JobEditPage from "./pages/JobEditPage";
 import EmployerJobApplicationsPage from "./pages/EmployerJobApplicationsPage";
 import EmployerApplicationDetailPage from "./pages/EmployerApplicationDetailPage";
@@ -89,33 +86,9 @@ const AppRoutes = () => {
           </ProtectedRoute>
         } 
       />
-      {/* Employer Routes */}
+      {/* Job Management Routes */}
       <Route 
-        path="/employer/register" 
-        element={
-          <ProtectedRoute>
-            <EmployerRegistrationPage />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/employer/dashboard" 
-        element={
-          <ProtectedRoute>
-            <EmployerDashboardPage />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/employer/profile/edit" 
-        element={
-          <ProtectedRoute>
-            <EmployerProfileEditPage />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/employer/jobs/:id/edit" 
+        path="/jobs/:id/edit" 
         element={
           <ProtectedRoute>
             <JobEditPage />
@@ -123,7 +96,7 @@ const AppRoutes = () => {
         } 
       />
       <Route 
-        path="/employer/jobs/:id/applications" 
+        path="/jobs/:id/applications" 
         element={
           <ProtectedRoute>
             <EmployerJobApplicationsPage />
@@ -131,7 +104,7 @@ const AppRoutes = () => {
         } 
       />
       <Route 
-        path="/employer/jobs/:jobId/applications/:applicationId" 
+        path="/jobs/:jobId/applications/:applicationId" 
         element={
           <ProtectedRoute>
             <EmployerApplicationDetailPage />
