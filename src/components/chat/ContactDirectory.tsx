@@ -52,19 +52,19 @@ export function ContactDirectory({ type }: ContactDirectoryProps) {
           setContacts(formattedContacts);
           setFilteredContacts(formattedContacts);
         } else {
-          // Fetch students (profiles)
+          // Fetch students
           const { data, error } = await supabase
-            .from("profiles")
-            .select("id, name, major");
+            .from("students")
+            .select("user_id, name, major");
             
           if (error) throw error;
           
           const formattedContacts = data
-            .filter(profile => profile.name) // Only include profiles with names
-            .map(profile => ({
-              id: profile.id,
-              name: profile.name || "Student",
-              title: profile.major,
+            .filter(student => student.name) // Only include students with names
+            .map(student => ({
+              id: student.user_id,
+              name: student.name || "Student",
+              title: student.major,
               type: "student" as const
             }));
           

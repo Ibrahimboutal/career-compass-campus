@@ -38,11 +38,11 @@ export function SkillsManager({ userId, initialSkills, onUpdate }: SkillsManager
       setIsSubmitting(true);
       
       const { error } = await supabase
-        .from('profiles')
+        .from('students')
         .update({ 
           skills: updatedSkills 
         })
-        .eq('id', userId);
+        .eq('user_id', userId);
       
       if (error) throw error;
       
@@ -68,11 +68,11 @@ export function SkillsManager({ userId, initialSkills, onUpdate }: SkillsManager
       setIsSubmitting(true);
       
       const { error } = await supabase
-        .from('profiles')
+        .from('students')
         .update({ 
           skills: updatedSkills 
         })
-        .eq('id', userId);
+        .eq('user_id', userId);
       
       if (error) throw error;
       

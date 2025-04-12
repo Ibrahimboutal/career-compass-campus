@@ -48,13 +48,6 @@ export type Database = {
             referencedRelation: "jobs"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "applications_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
         ]
       }
       chat_messages: {
@@ -225,42 +218,6 @@ export type Database = {
           },
         ]
       }
-      profiles: {
-        Row: {
-          created_at: string
-          email: string | null
-          graduation_year: string | null
-          id: string
-          major: string | null
-          name: string | null
-          resume_url: string | null
-          skills: string[] | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          email?: string | null
-          graduation_year?: string | null
-          id: string
-          major?: string | null
-          name?: string | null
-          resume_url?: string | null
-          skills?: string[] | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          email?: string | null
-          graduation_year?: string | null
-          id?: string
-          major?: string | null
-          name?: string | null
-          resume_url?: string | null
-          skills?: string[] | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
       saved_jobs: {
         Row: {
           created_at: string
@@ -289,6 +246,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      students: {
+        Row: {
+          created_at: string
+          email: string | null
+          graduation_year: string | null
+          id: string
+          major: string | null
+          name: string | null
+          resume_url: string | null
+          skills: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          graduation_year?: string | null
+          id?: string
+          major?: string | null
+          name?: string | null
+          resume_url?: string | null
+          skills?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          graduation_year?: string | null
+          id?: string
+          major?: string | null
+          name?: string | null
+          resume_url?: string | null
+          skills?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {

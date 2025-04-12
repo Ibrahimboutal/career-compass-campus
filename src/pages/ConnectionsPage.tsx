@@ -3,33 +3,14 @@ import { Navbar } from "@/components/Navbar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ContactDirectory } from "@/components/chat/ContactDirectory";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { Navigate } from "react-router-dom";
 
 export default function ConnectionsPage() {
-  const { user } = useAuth();
-  const [userType, setUserType] = useState<"student" | "recruiter" | null>(null);
+  const { user, userRole } = useAuth();
   
-  useEffect(() => {
-    if (!user) return;
-    
-    const checkUserType = async () => {
-      // Check if user is a recruiter
-      const { data: employer } = await supabase
-        .from("employers")
-        .select("id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-        
-      if (employer) {
-        setUserType("recruiter");
-      } else {
-        setUserType("student");
-      }
-    };
-    
-    checkUserType();
-  }, [user]);
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
   
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -38,7 +19,7 @@ export default function ConnectionsPage() {
       <main className="flex-1 container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-6">Connections</h1>
         
-        {userType === "student" ? (
+        {userRole === "student" ? (
           <Tabs defaultValue="recruiters">
             <TabsList className="mb-6">
               <TabsTrigger value="recruiters">Find Recruiters</TabsTrigger>
@@ -58,7 +39,7 @@ export default function ConnectionsPage() {
               </div>
             </TabsContent>
           </Tabs>
-        ) : userType === "recruiter" ? (
+        ) : userRole === "recruiter" ? (
           <Tabs defaultValue="students">
             <TabsList className="mb-6">
               <TabsTrigger value="students">Find Students</TabsTrigger>
@@ -80,7 +61,7 @@ export default function ConnectionsPage() {
           </Tabs>
         ) : (
           <div className="text-center py-10">
-            <p>Loading...</p>
+            <p>Please complete your profile setup to connect with others.</p>
           </div>
         )}
       </main>

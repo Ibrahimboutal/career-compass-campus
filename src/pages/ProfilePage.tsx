@@ -11,10 +11,11 @@ import { SkillsCard } from "@/components/profile/SkillsCard";
 import { ResumeUploader } from "@/components/ResumeUploader";
 import { SkillsManager } from "@/components/SkillsManager";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Navigate } from "react-router-dom";
 
 const ProfilePage = () => {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isResumeDialogOpen, setIsResumeDialogOpen] = useState(false);
@@ -40,24 +41,55 @@ const ProfilePage = () => {
     try {
       setIsLoading(true);
       
+      // Check if user is a student first
       const { data, error } = await supabase
-        .from('profiles')
+        .from('students')
         .select('*')
-        .eq('id', user?.id)
+        .eq('user_id', user?.id)
         .single();
       
-      if (error) throw error;
-      
-      setProfileData({
-        name: data.name || "",
-        email: data.email || "",
-        major: data.major || "",
-        graduationYear: data.graduation_year || "",
-        phone: "(555) 123-4567", // Assuming this is not stored in the DB yet
-        about: "Computer Science student with interests in web development and artificial intelligence.",
-        resumeUrl: data.resume_url,
-        skills: data.skills || []
-      });
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // No student record exists yet, this could be a new user
+          const studentData = {
+            user_id: user?.id,
+            name: user?.user_metadata?.name || '',
+            email: user?.email || ''
+          };
+          
+          const { data: newStudent, error: createError } = await supabase
+            .from('students')
+            .insert(studentData)
+            .select()
+            .single();
+          
+          if (createError) throw createError;
+          
+          setProfileData({
+            name: newStudent.name || "",
+            email: newStudent.email || "",
+            major: "",
+            graduationYear: "",
+            phone: "(555) 123-4567",
+            about: "Computer Science student with interests in web development and artificial intelligence.",
+            resumeUrl: null,
+            skills: []
+          });
+        } else {
+          throw error;
+        }
+      } else {
+        setProfileData({
+          name: data.name || "",
+          email: data.email || "",
+          major: data.major || "",
+          graduationYear: data.graduation_year || "",
+          phone: "(555) 123-4567",
+          about: "Computer Science student with interests in web development and artificial intelligence.",
+          resumeUrl: data.resume_url,
+          skills: data.skills || []
+        });
+      }
     } catch (error: any) {
       toast({
         title: "Error loading profile",
@@ -78,15 +110,24 @@ const ProfilePage = () => {
   
   const handleSaveProfile = async () => {
     try {
+      // If user is a recruiter, redirect them to employer profile
+      if (userRole === 'recruiter') {
+        toast({
+          title: "Access Denied",
+          description: "Recruiters cannot modify student profiles"
+        });
+        return;
+      }
+      
       const { error } = await supabase
-        .from('profiles')
+        .from('students')
         .update({
           name: profileData.name,
           email: profileData.email,
           major: profileData.major,
           graduation_year: profileData.graduationYear
         })
-        .eq('id', user?.id);
+        .eq('user_id', user?.id);
       
       if (error) throw error;
       
@@ -130,6 +171,11 @@ const ProfilePage = () => {
   const years = [
     "2025", "2026", "2027", "2028", "2029"
   ];
+
+  // Redirect recruiters to their profile
+  if (userRole === 'recruiter') {
+    return <Navigate to="/employer/profile/edit" replace />;
+  }
 
   if (isLoading) {
     return (

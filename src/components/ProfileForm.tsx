@@ -37,14 +37,14 @@ export function ProfileForm({ initialData, onSuccess }: ProfileFormProps) {
       setIsSubmitting(true);
       
       const { error } = await supabase
-        .from('profiles')
+        .from('students')
         .update({
           name: values.name,
           email: values.email,
           major: values.major,
           graduation_year: values.graduation_year
         })
-        .eq('id', initialData.id);
+        .eq('user_id', initialData.id);
       
       if (error) throw error;
       

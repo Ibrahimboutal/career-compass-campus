@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -531,37 +532,15 @@ const EmployerDashboard = () => {
 
 // Main Dashboard Page
 const DashboardPage = () => {
-  const { user } = useAuth();
-  const [isEmployer, setIsEmployer] = useState(false);
+  const { user, userRole, loading } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("student");
+  const { toast } = useToast();
 
   useEffect(() => {
-    const checkEmployerStatus = async () => {
-      if (!user) return;
-
-      try {
-        setIsLoading(true);
-        const { data, error } = await supabase
-          .from("employers")
-          .select("id")
-          .eq("user_id", user.id)
-          .maybeSingle();
-
-        if (error) throw error;
-        setIsEmployer(!!data);
-        if (!!data) {
-          setActiveTab("employer");
-        }
-      } catch (error: any) {
-        console.error("Error checking employer status:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkEmployerStatus();
-  }, [user]);
+    if (!loading) {
+      setIsLoading(false);
+    }
+  }, [loading]);
 
   if (isLoading) {
     return (
@@ -576,26 +555,48 @@ const DashboardPage = () => {
     );
   }
 
+  // Redirect to auth if not logged in
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  // Show appropriate dashboard based on user role
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Dashboard</h1>
-          {isEmployer && (
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
-              <TabsList>
-                <TabsTrigger value="student">Student</TabsTrigger>
-                <TabsTrigger value="employer">Employer</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          )}
         </div>
         
-        {isEmployer ? (
-          activeTab === "employer" ? <EmployerDashboard /> : <StudentDashboard />
-        ) : (
+        {userRole === 'recruiter' ? (
+          <EmployerDashboard />
+        ) : userRole === 'student' ? (
           <StudentDashboard />
+        ) : (
+          <div className="text-center py-12">
+            <Card>
+              <CardHeader>
+                <CardTitle>Complete Your Profile</CardTitle>
+                <CardDescription>
+                  Tell us whether you're a student or an employer to continue.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-muted-foreground">
+                  Please complete your profile to access the dashboard.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+                  <Button asChild>
+                    <Link to="/profile">Set Up Student Profile</Link>
+                  </Button>
+                  <Button asChild>
+                    <Link to="/employer/register">Register as Employer</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
       </main>
     </div>
