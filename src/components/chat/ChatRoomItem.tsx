@@ -42,11 +42,11 @@ export function ChatRoomItem({
           if (error) throw error;
           setPartnerName(data.company_name);
         } else {
-          // Get student info (profile)
+          // Get student info from students table (not profiles)
           const { data, error } = await supabase
-            .from('profiles')
+            .from('students')
             .select('name')
-            .eq('id', partnerId)
+            .eq('user_id', partnerId)
             .single();
             
           if (error) throw error;

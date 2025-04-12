@@ -40,18 +40,21 @@ const AuthPage = () => {
       if (error) throw error;
       
       if (data.user) {
-        // Update the profile with additional info
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            name,
-            major: userType === 'student' ? major : null,
-            graduation_year: userType === 'student' ? graduationYear : null,
-            skills: []
-          })
-          .eq('id', data.user.id);
-        
-        if (profileError) throw profileError;
+        // Update student or employer info based on user type
+        if (userType === 'student') {
+          // We now update students table directly instead of profiles
+          const { error: studentError } = await supabase
+            .from('students')
+            .update({
+              name,
+              major,
+              graduation_year: graduationYear,
+              skills: []
+            })
+            .eq('user_id', data.user.id);
+          
+          if (studentError) throw studentError;
+        }
         
         toast({
           title: "Account created",

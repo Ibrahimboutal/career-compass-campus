@@ -74,7 +74,7 @@ export function useApplicationDetail(jobId: string | undefined, applicationId: s
         return;
       }
       
-      // Now get the application details with joins
+      // Now get the application details with joins to students table instead of profiles
       const { data, error } = await supabase
         .from('applications')
         .select(`
@@ -82,7 +82,7 @@ export function useApplicationDetail(jobId: string | undefined, applicationId: s
           status, 
           applied_date,
           notes,
-          profiles!applications_user_id_fkey (
+          students!applications_user_id_fkey (
             id, 
             name, 
             email, 
@@ -121,13 +121,13 @@ export function useApplicationDetail(jobId: string | undefined, applicationId: s
         applied_date: data.applied_date,
         notes: data.notes,
         user: {
-          id: data.profiles.id,
-          name: data.profiles.name,
-          email: data.profiles.email,
-          resume_url: data.profiles.resume_url,
-          major: data.profiles.major,
-          graduation_year: data.profiles.graduation_year,
-          skills: data.profiles.skills
+          id: data.students.id,
+          name: data.students.name,
+          email: data.students.email,
+          resume_url: data.students.resume_url,
+          major: data.students.major,
+          graduation_year: data.students.graduation_year,
+          skills: data.students.skills
         },
         job: {
           id: data.jobs.id,

@@ -52,7 +52,7 @@ export function ContactDirectory({ type }: ContactDirectoryProps) {
           setContacts(formattedContacts);
           setFilteredContacts(formattedContacts);
         } else {
-          // Fetch students
+          // Fetch students - now from students table instead of profiles
           const { data, error } = await supabase
             .from("students")
             .select("user_id, name, major");

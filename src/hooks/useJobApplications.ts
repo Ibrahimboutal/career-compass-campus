@@ -83,14 +83,14 @@ export function useJobApplications(jobId: string | undefined) {
       const from = (page - 1) * applicationsPerPage;
       const to = from + applicationsPerPage - 1;
       
-      // Build the applications query with filters
+      // Build the applications query with filters - join with students table instead of profiles
       let query = supabase
         .from('applications')
         .select(`
           id, 
           status, 
           applied_date,
-          profiles!applications_user_id_fkey (
+          students!applications_user_id_fkey (
             id, 
             name, 
             email, 
@@ -136,16 +136,16 @@ export function useJobApplications(jobId: string | undefined) {
       
       // Transform the data to match our interface
       const transformedData: ApplicationData[] = applicationsData
-        .filter(app => app.profiles) // Filter out any null profiles
+        .filter(app => app.students) // Filter out any null students
         .map(app => ({
           id: app.id,
           user: {
-            id: app.profiles.id,
-            name: app.profiles.name || 'Unnamed Applicant',
-            email: app.profiles.email || 'No email provided',
-            resume_url: app.profiles.resume_url,
-            major: app.profiles.major,
-            graduation_year: app.profiles.graduation_year
+            id: app.students.id,
+            name: app.students.name || 'Unnamed Applicant',
+            email: app.students.email || 'No email provided',
+            resume_url: app.students.resume_url,
+            major: app.students.major,
+            graduation_year: app.students.graduation_year
           },
           status: app.status as "Applied" | "Under Review" | "Interview" | "Offered" | "Rejected",
           applied_date: app.applied_date

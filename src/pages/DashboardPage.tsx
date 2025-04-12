@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
@@ -52,11 +51,11 @@ const StudentDashboard = () => {
       try {
         setIsLoading(true);
 
-        // Fetch profile data
+        // Fetch student data - now from students table instead of profiles
         const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
+          .from("students")
           .select("name, major")
-          .eq("id", user.id)
+          .eq("user_id", user.id)
           .single();
 
         if (profileError) throw profileError;
