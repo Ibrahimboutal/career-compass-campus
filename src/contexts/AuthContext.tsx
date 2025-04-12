@@ -20,9 +20,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up the auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
+    // Get the initial session first
+    const getInitialSession = async () => {
+      try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
@@ -31,53 +32,72 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
           setUserRole(null);
         }
-        
+      } catch (error) {
+        console.error("Error getting initial session:", error);
+      } finally {
         setLoading(false);
       }
-    );
+    };
 
-    // Get the initial session
-    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      
-      if (currentSession?.user) {
-        await checkUserRole(currentSession.user.id);
+    getInitialSession();
+
+    // Set up the auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, currentSession) => {
+        console.log("Auth state changed:", event, currentSession?.user?.id);
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        
+        if (currentSession?.user) {
+          await checkUserRole(currentSession.user.id);
+        } else {
+          setUserRole(null);
+        }
       }
-      
-      setLoading(false);
-    });
+    );
 
     return () => subscription.unsubscribe();
   }, []);
 
   const checkUserRole = async (userId: string) => {
     try {
+      console.log("Checking user role for:", userId);
       // Check if user is a recruiter (employer)
-      const { data: employer } = await supabase
+      const { data: employer, error: employerError } = await supabase
         .from('employers')
         .select('id')
         .eq('user_id', userId)
         .maybeSingle();
       
+      if (employerError) {
+        console.error("Error checking employer:", employerError);
+      }
+      
       if (employer) {
+        console.log("User is a recruiter");
         setUserRole('recruiter');
         return;
       }
       
       // Check if user is a student
-      const { data: student } = await supabase
+      const { data: student, error: studentError } = await supabase
         .from('students')
         .select('id')
         .eq('user_id', userId)
         .maybeSingle();
       
+      if (studentError) {
+        console.error("Error checking student:", studentError);
+      }
+      
       if (student) {
+        console.log("User is a student");
         setUserRole('student');
         return;
       }
       
       // If neither, role is null
+      console.log("User has no role assigned");
       setUserRole(null);
     } catch (error) {
       console.error('Error determining user role:', error);
@@ -86,7 +106,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Error signing out:", error);
+    }
     setUserRole(null);
   };
 

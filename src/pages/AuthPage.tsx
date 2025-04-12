@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +25,7 @@ const AuthPage = () => {
     setLoading(true);
     
     try {
+      // First create the user account
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -40,18 +40,18 @@ const AuthPage = () => {
       if (error) throw error;
       
       if (data.user) {
-        // Update student or employer info based on user type
+        // Then create the student record if it's a student
         if (userType === 'student') {
-          // We now update students table directly instead of profiles
           const { error: studentError } = await supabase
             .from('students')
-            .update({
+            .insert({
+              user_id: data.user.id,
               name,
+              email,
               major,
               graduation_year: graduationYear,
               skills: []
-            })
-            .eq('user_id', data.user.id);
+            });
           
           if (studentError) throw studentError;
         }

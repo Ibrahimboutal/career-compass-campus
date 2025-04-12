@@ -19,14 +19,38 @@ import JobEditPage from "./pages/JobEditPage";
 import EmployerJobApplicationsPage from "./pages/EmployerJobApplicationsPage";
 import EmployerApplicationDetailPage from "./pages/EmployerApplicationDetailPage";
 import NotFound from "./pages/NotFound";
+import { Skeleton } from "./components/ui/skeleton";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+// Loading component
+const LoadingScreen = () => (
+  <div className="flex flex-col items-center justify-center h-screen p-4">
+    <div className="w-full max-w-md space-y-4">
+      <Skeleton className="h-12 w-1/2 mx-auto" />
+      <Skeleton className="h-4 w-3/4 mx-auto" />
+      <div className="space-y-2">
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-full" />
+      </div>
+    </div>
+  </div>
+);
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   
-  if (loading) return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  if (loading) {
+    return <LoadingScreen />;
+  }
   
   if (!user) {
     return <Navigate to="/auth" replace />;
@@ -38,7 +62,9 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const AppRoutes = () => {
   const { user, loading } = useAuth();
   
-  if (loading) return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  if (loading) {
+    return <LoadingScreen />;
+  }
   
   return (
     <Routes>
