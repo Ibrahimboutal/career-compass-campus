@@ -10,7 +10,7 @@ import { Loader2, MessageSquare, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const MessagesPage = () => {
   const { 
@@ -25,7 +25,7 @@ const MessagesPage = () => {
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const [showMobileChat, setShowMobileChat] = useState(false);
   
   // Scroll to bottom whenever messages change
