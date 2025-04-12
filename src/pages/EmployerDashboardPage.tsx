@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { JobForm } from "@/components/JobForm";
-import { Briefcase, PlusCircle, Building, UserRound } from "lucide-react";
+import { Briefcase, PlusCircle, Building, UserRound, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Job, Employer } from "@/data/types";
 import { useEmployers } from "@/hooks/useEmployers";
@@ -108,29 +108,37 @@ export default function EmployerDashboardPage() {
     <div className="container py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Employer Dashboard</h1>
-        <Dialog open={isJobDialogOpen} onOpenChange={setIsJobDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Post New Job
+        <div className="flex gap-2">
+          <Link to="/messages">
+            <Button variant="outline">
+              <MessageSquare className="mr-2 h-4 w-4" />
+              Messages
             </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-3xl">
-            <DialogHeader>
-              <DialogTitle>Create New Job</DialogTitle>
-              <DialogDescription>
-                Fill in the details to post a new job opening.
-              </DialogDescription>
-            </DialogHeader>
-            <JobForm 
-              employerId={employer.id} 
-              onSuccess={() => {
-                setIsJobDialogOpen(false);
-                fetchEmployerData();
-              }} 
-            />
-          </DialogContent>
-        </Dialog>
+          </Link>
+          <Dialog open={isJobDialogOpen} onOpenChange={setIsJobDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Post New Job
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Create New Job</DialogTitle>
+                <DialogDescription>
+                  Fill in the details to post a new job opening.
+                </DialogDescription>
+              </DialogHeader>
+              <JobForm 
+                employerId={employer.id} 
+                onSuccess={() => {
+                  setIsJobDialogOpen(false);
+                  fetchEmployerData();
+                }} 
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

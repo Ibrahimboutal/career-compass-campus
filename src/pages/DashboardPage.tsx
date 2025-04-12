@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { ProfileForm } from "@/components/ProfileForm";
 import { ResumeUploader } from "@/components/ResumeUploader";
 import { SkillsManager } from "@/components/SkillsManager";
-import { Briefcase, Calendar, User } from "lucide-react";
+import { Briefcase, Calendar, MessageSquare, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -211,6 +211,19 @@ const DashboardPage = () => {
     );
   }
 
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gray-50">
+        <Navbar />
+        <main className="flex-1 container mx-auto px-4 py-8">
+          <div className="text-center py-10">
+            <p>No profile data found. Please update your profile.</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
@@ -222,7 +235,13 @@ const DashboardPage = () => {
             <p className="text-gray-600">Manage your job applications and profile</p>
           </div>
           
-          <div className="mt-4 md:mt-0">
+          <div className="mt-4 md:mt-0 flex gap-2">
+            <Link to="/messages">
+              <Button variant="outline">
+                <MessageSquare className="mr-2 h-4 w-4" />
+                Messages
+              </Button>
+            </Link>
             <Link to="/jobs">
               <Button>
                 <Briefcase className="mr-2 h-4 w-4" />

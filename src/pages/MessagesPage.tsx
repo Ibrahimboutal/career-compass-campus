@@ -6,10 +6,11 @@ import { ChatRoomItem } from "@/components/chat/ChatRoomItem";
 import { ChatInputBox } from "@/components/chat/ChatInputBox";
 import { useChat } from "@/contexts/ChatContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2, MessageSquare } from "lucide-react";
+import { Loader2, MessageSquare, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useMobile } from "@/hooks/use-mobile";
 
 const MessagesPage = () => {
   const { 
@@ -24,6 +25,8 @@ const MessagesPage = () => {
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  const isMobile = useMobile();
+  const [showMobileChat, setShowMobileChat] = useState(false);
   
   // Scroll to bottom whenever messages change
   useEffect(() => {
@@ -59,6 +62,26 @@ const MessagesPage = () => {
     
     fetchUnreadCounts();
   }, [chatRooms, user]);
+
+  // Set mobile view when a room is selected
+  useEffect(() => {
+    if (currentRoom && isMobile) {
+      setShowMobileChat(true);
+    }
+  }, [currentRoom, isMobile]);
+
+  // Handle room selection
+  const handleRoomSelect = (room: any) => {
+    setCurrentRoom(room);
+    if (isMobile) {
+      setShowMobileChat(true);
+    }
+  };
+
+  // Handle back to room list on mobile
+  const handleBackToRooms = () => {
+    setShowMobileChat(false);
+  };
   
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -68,95 +91,109 @@ const MessagesPage = () => {
         <h1 className="text-3xl font-bold mb-6">Messages</h1>
         
         <div className="bg-white border rounded-lg shadow-sm overflow-hidden flex min-h-[600px]">
-          {/* Chat list */}
-          <div className="w-full md:w-1/3 border-r">
-            <div className="p-4 border-b">
-              <h2 className="font-semibold">Conversations</h2>
+          {/* Chat list - hide on mobile when showing chat */}
+          {(!isMobile || (isMobile && !showMobileChat)) && (
+            <div className="w-full md:w-1/3 border-r">
+              <div className="p-4 border-b">
+                <h2 className="font-semibold">Conversations</h2>
+              </div>
+              
+              {loadingRooms ? (
+                <div className="flex items-center justify-center h-32">
+                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : chatRooms.length === 0 ? (
+                <div className="p-8 text-center">
+                  <MessageSquare className="mx-auto h-12 w-12 text-muted-foreground/60" />
+                  <h3 className="mt-4 text-lg font-medium">No conversations yet</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Your conversations with {user?.id.includes('recruiter') ? 'students' : 'recruiters'} will appear here
+                  </p>
+                  <Button className="mt-4" asChild>
+                    <Link to="/jobs">Browse Jobs</Link>
+                  </Button>
+                </div>
+              ) : (
+                <div className="overflow-y-auto max-h-[calc(600px-65px)]">
+                  {chatRooms.map(room => (
+                    <ChatRoomItem
+                      key={room.id}
+                      id={room.id}
+                      studentId={room.student_id}
+                      recruiterId={room.recruiter_id}
+                      updatedAt={room.updated_at}
+                      isActive={currentRoom?.id === room.id}
+                      onClick={() => handleRoomSelect(room)}
+                      unreadCount={unreadCounts[room.id] || 0}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
-            
-            {loadingRooms ? (
-              <div className="flex items-center justify-center h-32">
-                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : chatRooms.length === 0 ? (
-              <div className="p-8 text-center">
-                <MessageSquare className="mx-auto h-12 w-12 text-muted-foreground/60" />
-                <h3 className="mt-4 text-lg font-medium">No conversations yet</h3>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Your conversations with recruiters will appear here
-                </p>
-                <Button className="mt-4" asChild>
-                  <Link to="/jobs">Browse Jobs</Link>
-                </Button>
-              </div>
-            ) : (
-              <div className="overflow-y-auto max-h-[calc(600px-65px)]">
-                {chatRooms.map(room => (
-                  <ChatRoomItem
-                    key={room.id}
-                    id={room.id}
-                    studentId={room.student_id}
-                    recruiterId={room.recruiter_id}
-                    updatedAt={room.updated_at}
-                    isActive={currentRoom?.id === room.id}
-                    onClick={() => setCurrentRoom(room)}
-                    unreadCount={unreadCounts[room.id] || 0}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+          )}
           
-          {/* Chat messages */}
-          <div className="hidden md:flex flex-col w-2/3 bg-white">
-            {!currentRoom ? (
-              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                <MessageSquare className="h-16 w-16 text-muted-foreground/60" />
-                <h3 className="mt-4 text-xl font-medium">Select a conversation</h3>
-                <p className="mt-2 text-muted-foreground">
-                  Choose a conversation from the sidebar to start chatting
-                </p>
-              </div>
-            ) : (
-              <>
-                <div className="p-4 border-b">
-                  <h3 className="font-semibold">
-                    {user?.id === currentRoom.student_id ? "Recruiter" : "Student"}
-                  </h3>
+          {/* Chat messages - show on desktop or when mobile chat is active */}
+          {(!isMobile || (isMobile && showMobileChat)) && (
+            <div className="flex flex-col w-full md:w-2/3 bg-white">
+              {!currentRoom ? (
+                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+                  <MessageSquare className="h-16 w-16 text-muted-foreground/60" />
+                  <h3 className="mt-4 text-xl font-medium">Select a conversation</h3>
+                  <p className="mt-2 text-muted-foreground">
+                    Choose a conversation from the sidebar to start chatting
+                  </p>
                 </div>
-                
-                <div className="flex-1 overflow-y-auto p-4">
-                  {loadingMessages ? (
-                    <div className="flex items-center justify-center h-full">
-                      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : messages.length === 0 ? (
-                    <div className="flex items-center justify-center h-full text-center">
-                      <div>
-                        <p className="text-muted-foreground">No messages yet</p>
-                        <p className="text-sm text-muted-foreground">Start the conversation by sending a message</p>
+              ) : (
+                <>
+                  <div className="p-4 border-b flex items-center">
+                    {isMobile && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="mr-2" 
+                        onClick={handleBackToRooms}
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <h3 className="font-semibold">
+                      {user?.id === currentRoom.student_id ? "Recruiter" : "Student"}
+                    </h3>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto p-4">
+                    {loadingMessages ? (
+                      <div className="flex items-center justify-center h-full">
+                        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
                       </div>
-                    </div>
-                  ) : (
-                    <>
-                      {messages.map(message => (
-                        <ChatMessage
-                          key={message.id}
-                          content={message.content}
-                          senderId={message.sender_id}
-                          timestamp={message.created_at}
-                          isRead={message.is_read}
-                        />
-                      ))}
-                      <div ref={messagesEndRef} />
-                    </>
-                  )}
-                </div>
-                
-                <ChatInputBox onSendMessage={sendMessage} />
-              </>
-            )}
-          </div>
+                    ) : messages.length === 0 ? (
+                      <div className="flex items-center justify-center h-full text-center">
+                        <div>
+                          <p className="text-muted-foreground">No messages yet</p>
+                          <p className="text-sm text-muted-foreground">Start the conversation by sending a message</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        {messages.map(message => (
+                          <ChatMessage
+                            key={message.id}
+                            content={message.content}
+                            senderId={message.sender_id}
+                            timestamp={message.created_at}
+                            isRead={message.is_read}
+                          />
+                        ))}
+                        <div ref={messagesEndRef} />
+                      </>
+                    )}
+                  </div>
+                  
+                  <ChatInputBox onSendMessage={sendMessage} />
+                </>
+              )}
+            </div>
+          )}
         </div>
       </main>
     </div>
