@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -74,65 +73,58 @@ export function useApplicationDetail(jobId: string | undefined, applicationId: s
         return;
       }
       
-      // Now get the application details with joins to students table instead of profiles
-      const { data, error } = await supabase
+      // First get the application
+      const { data: appData, error: appError } = await supabase
         .from('applications')
-        .select(`
-          id, 
-          status, 
-          applied_date,
-          notes,
-          students!applications_user_id_fkey (
-            id, 
-            name, 
-            email, 
-            resume_url,
-            major,
-            graduation_year,
-            skills
-          ),
-          jobs!applications_job_id_fkey (
-            id,
-            title,
-            company
-          )
-        `)
+        .select('id, status, applied_date, notes, job_id, user_id')
         .eq('id', applicationId)
         .eq('job_id', jobId)
         .single();
       
-      if (error) {
-        throw error;
+      if (appError) {
+        throw appError;
       }
       
-      if (!data) {
-        toast({
-          title: "Application Not Found",
-          description: "The application you're looking for doesn't exist",
-          variant: "destructive",
-        });
-        navigate(`/employer/jobs/${jobId}/applications`);
-        return;
+      // Then get the student info separately
+      const { data: studentData, error: studentError } = await supabase
+        .from('students')
+        .select('id, name, email, resume_url, major, graduation_year, skills')
+        .eq('user_id', appData.user_id)
+        .single();
+      
+      if (studentError) {
+        console.error("Error fetching student data:", studentError);
+      }
+      
+      // Then get the job info separately
+      const { data: jobInfo, error: jobInfoError } = await supabase
+        .from('jobs')
+        .select('id, title, company')
+        .eq('id', appData.job_id)
+        .single();
+      
+      if (jobInfoError) {
+        console.error("Error fetching job data:", jobInfoError);
       }
       
       const applicationDetail: ApplicationDetail = {
-        id: data.id,
-        status: data.status as "Applied" | "Under Review" | "Interview" | "Offered" | "Rejected",
-        applied_date: data.applied_date,
-        notes: data.notes,
+        id: appData.id,
+        status: appData.status as "Applied" | "Under Review" | "Interview" | "Offered" | "Rejected",
+        applied_date: appData.applied_date,
+        notes: appData.notes,
         user: {
-          id: data.students.id,
-          name: data.students.name,
-          email: data.students.email,
-          resume_url: data.students.resume_url,
-          major: data.students.major,
-          graduation_year: data.students.graduation_year,
-          skills: data.students.skills
+          id: studentData?.id || appData.user_id,
+          name: studentData?.name || 'Unknown Student',
+          email: studentData?.email || 'No email provided',
+          resume_url: studentData?.resume_url,
+          major: studentData?.major,
+          graduation_year: studentData?.graduation_year,
+          skills: studentData?.skills
         },
         job: {
-          id: data.jobs.id,
-          title: data.jobs.title,
-          company: data.jobs.company
+          id: jobInfo?.id || appData.job_id,
+          title: jobInfo?.title || 'Unknown Position',
+          company: jobInfo?.company || 'Unknown Company'
         }
       };
       

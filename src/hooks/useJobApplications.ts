@@ -83,22 +83,10 @@ export function useJobApplications(jobId: string | undefined) {
       const from = (page - 1) * applicationsPerPage;
       const to = from + applicationsPerPage - 1;
       
-      // Build the applications query with filters - join with students table instead of profiles
+      // Get applications 
       let query = supabase
         .from('applications')
-        .select(`
-          id, 
-          status, 
-          applied_date,
-          students!applications_user_id_fkey (
-            id, 
-            name, 
-            email, 
-            resume_url,
-            major,
-            graduation_year
-          )
-        `)
+        .select('id, status, applied_date, user_id')
         .eq('job_id', jobId)
         .range(from, to);
       
@@ -134,24 +122,36 @@ export function useJobApplications(jobId: string | undefined) {
       
       setTotalPages(Math.ceil((count || 0) / applicationsPerPage));
       
-      // Transform the data to match our interface
-      const transformedData: ApplicationData[] = applicationsData
-        .filter(app => app.students) // Filter out any null students
-        .map(app => ({
+      // For each application, get the student details
+      const transformedApplications: ApplicationData[] = [];
+      
+      for (const app of applicationsData) {
+        const { data: studentData, error: studentError } = await supabase
+          .from('students')
+          .select('id, name, email, resume_url, major, graduation_year')
+          .eq('user_id', app.user_id)
+          .single();
+        
+        if (studentError) {
+          console.error(`Error fetching student data for user ${app.user_id}:`, studentError);
+        }
+        
+        transformedApplications.push({
           id: app.id,
           user: {
-            id: app.students.id,
-            name: app.students.name || 'Unnamed Applicant',
-            email: app.students.email || 'No email provided',
-            resume_url: app.students.resume_url,
-            major: app.students.major,
-            graduation_year: app.students.graduation_year
+            id: studentData?.id || app.user_id,
+            name: studentData?.name || 'Unnamed Applicant',
+            email: studentData?.email || 'No email provided',
+            resume_url: studentData?.resume_url,
+            major: studentData?.major,
+            graduation_year: studentData?.graduation_year
           },
           status: app.status as "Applied" | "Under Review" | "Interview" | "Offered" | "Rejected",
           applied_date: app.applied_date
-        }));
+        });
+      }
       
-      setApplications(transformedData);
+      setApplications(transformedApplications);
       
     } catch (error: any) {
       console.error("Error loading applications:", error);
