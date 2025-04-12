@@ -14,6 +14,7 @@ import DashboardPage from "./pages/DashboardPage";
 import ProfilePage from "./pages/ProfilePage";
 import SavedJobsPage from "./pages/SavedJobsPage";
 import MessagesPage from "./pages/MessagesPage";
+import ConnectionsPage from "./pages/ConnectionsPage";
 import EmployerDashboardPage from "./pages/EmployerDashboardPage";
 import EmployerRegistrationPage from "./pages/EmployerRegistrationPage";
 import EmployerProfileEditPage from "./pages/EmployerProfileEditPage";
@@ -77,6 +78,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <MessagesPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/connections" 
+        element={
+          <ProtectedRoute>
+            <ConnectionsPage />
           </ProtectedRoute>
         } 
       />

@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,7 +29,7 @@ interface ChatContextType {
   loadingMessages: boolean;
   setCurrentRoom: (room: ChatRoom | null) => void;
   sendMessage: (content: string) => Promise<void>;
-  createChatRoom: (recruiterId: string, jobId?: string) => Promise<string | null>;
+  createChatRoom: (partnerId: string, jobId?: string) => Promise<string | null>;
   unreadCount: number;
 }
 
@@ -185,18 +184,53 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   }, [currentRoom, user]);
 
   // Create a new chat room
-  const createChatRoom = async (recruiterId: string, jobId?: string) => {
+  const createChatRoom = async (partnerId: string, jobId?: string) => {
     if (!user) {
       toast.error("You must be logged in to start a chat");
       return null;
     }
 
     try {
+      // Determine if current user is student or recruiter
+      const { data: employerData } = await supabase
+        .from('employers')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      const isCurrentUserRecruiter = !!employerData;
+      
+      // Determine if partner is student or recruiter
+      const { data: partnerEmployerData } = await supabase
+        .from('employers')
+        .select('id')
+        .eq('user_id', partnerId)
+        .maybeSingle();
+      
+      const isPartnerRecruiter = !!partnerEmployerData;
+      
+      // Both users can't be the same type (both recruiter or both student)
+      if (isCurrentUserRecruiter === isPartnerRecruiter) {
+        toast.error(`You cannot chat with another ${isCurrentUserRecruiter ? 'recruiter' : 'student'}`);
+        return null;
+      }
+      
+      let studentId: string;
+      let recruiterId: string;
+      
+      if (isCurrentUserRecruiter) {
+        recruiterId = user.id;
+        studentId = partnerId;
+      } else {
+        recruiterId = partnerId;
+        studentId = user.id;
+      }
+
       // Check if room already exists
       const { data: existingRooms, error: fetchError } = await supabase
         .from('chat_rooms')
         .select('*')
-        .eq('student_id', user.id)
+        .eq('student_id', studentId)
         .eq('recruiter_id', recruiterId);
 
       if (fetchError) throw fetchError;
@@ -212,7 +246,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       const { data, error } = await supabase
         .from('chat_rooms')
         .insert({
-          student_id: user.id,
+          student_id: studentId,
           recruiter_id: recruiterId,
           job_id: jobId || null
         })

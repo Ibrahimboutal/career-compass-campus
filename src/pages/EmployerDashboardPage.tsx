@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { JobForm } from "@/components/JobForm";
-import { Briefcase, PlusCircle, Building, UserRound, MessageSquare } from "lucide-react";
+import { Briefcase, PlusCircle, Building, UserRound, MessageSquare, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Job, Employer } from "@/data/types";
 import { useEmployers } from "@/hooks/useEmployers";
@@ -113,6 +114,12 @@ export default function EmployerDashboardPage() {
             <Button variant="outline">
               <MessageSquare className="mr-2 h-4 w-4" />
               Messages
+            </Button>
+          </Link>
+          <Link to="/connections">
+            <Button variant="outline">
+              <Users className="mr-2 h-4 w-4" />
+              Find Students
             </Button>
           </Link>
           <Dialog open={isJobDialogOpen} onOpenChange={setIsJobDialogOpen}>
