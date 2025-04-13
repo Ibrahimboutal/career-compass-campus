@@ -18,6 +18,8 @@ import ConnectionsPage from "./pages/ConnectionsPage";
 import JobEditPage from "./pages/JobEditPage";
 import EmployerJobApplicationsPage from "./pages/EmployerJobApplicationsPage";
 import EmployerApplicationDetailPage from "./pages/EmployerApplicationDetailPage";
+import EmployerRegistrationPage from "./pages/EmployerRegistrationPage";
+import EmployerDashboardPage from "./pages/EmployerDashboardPage";
 import NotFound from "./pages/NotFound";
 import { Skeleton } from "./components/ui/skeleton";
 import { Progress } from "./components/ui/progress";
@@ -142,6 +144,24 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <EmployerApplicationDetailPage />
+          </ProtectedRoute>
+        } 
+      />
+      {/* Employer Registration Route */}
+      <Route 
+        path="/employer/register" 
+        element={
+          <ProtectedRoute>
+            <EmployerRegistrationPage />
+          </ProtectedRoute>
+        } 
+      />
+      {/* Employer Dashboard Route */}
+      <Route 
+        path="/employer/dashboard" 
+        element={
+          <ProtectedRoute>
+            <EmployerDashboardPage />
           </ProtectedRoute>
         } 
       />

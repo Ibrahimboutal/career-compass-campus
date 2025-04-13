@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Briefcase } from "lucide-react";
 
 const AuthPage = () => {
@@ -18,13 +19,15 @@ const AuthPage = () => {
   const [loading, setLoading] = useState(false);
   const [userType, setUserType] = useState<"student" | "employer">("student");
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
     try {
+      console.log("Signing up as:", userType);
+      
       // First create the user account
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -42,6 +45,7 @@ const AuthPage = () => {
       if (data.user) {
         // Then create the student record if it's a student
         if (userType === 'student') {
+          console.log("Creating student record for:", data.user.id);
           const { error: studentError } = await supabase
             .from('students')
             .insert({
@@ -53,29 +57,28 @@ const AuthPage = () => {
               skills: []
             });
           
-          if (studentError) throw studentError;
+          if (studentError) {
+            console.error("Error creating student record:", studentError);
+            throw studentError;
+          }
+          
+          toast.success("Student account created successfully!");
+          navigate("/dashboard");
         } else if (userType === 'employer') {
-          // For employers, we'll redirect to the employer registration page
-          // but we don't create an employer record yet
+          // For employers, redirect to the employer registration page
+          console.log("Redirecting employer to registration page");
+          toast.success("Account created! Please complete your employer profile.");
           navigate("/employer/register");
-          return;
         }
-        
-        toast({
-          title: "Account created",
-          description: "Welcome to CampusJobs! Please check your email to verify your account."
-        });
-        
-        // Auto-login after registration
-        navigate("/dashboard");
       }
     } catch (error: any) {
       console.error("Signup error:", error);
-      toast({
+      uiToast({
         title: "Error",
         description: error.message || "Failed to create account",
         variant: "destructive"
       });
+      toast.error(error.message || "Failed to create account");
     } finally {
       setLoading(false);
     }
@@ -86,6 +89,8 @@ const AuthPage = () => {
     setLoading(true);
     
     try {
+      console.log("Signing in with email:", email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -93,10 +98,7 @@ const AuthPage = () => {
 
       if (error) throw error;
       
-      toast({
-        title: "Welcome back",
-        description: "You've successfully signed in."
-      });
+      toast.success("Welcome back! You've successfully signed in.");
       
       // Check if the user is an employer
       const { data: employerData, error: employerError } = await supabase
@@ -106,7 +108,8 @@ const AuthPage = () => {
         .maybeSingle();
       
       if (!employerError && employerData) {
-        navigate("/dashboard");
+        console.log("User is an employer, redirecting to employer dashboard");
+        navigate("/employer/dashboard");
       } else {
         // Check if the user is a student
         const { data: studentData, error: studentError } = await supabase
@@ -116,6 +119,7 @@ const AuthPage = () => {
           .maybeSingle();
         
         if (!studentError && studentData) {
+          console.log("User is a student, redirecting to dashboard");
           navigate("/dashboard");
         } else {
           // If no profile exists, but the user has signed up previously,
@@ -123,20 +127,23 @@ const AuthPage = () => {
           const userType = data.user.user_metadata?.user_type;
           
           if (userType === 'employer') {
+            console.log("User is an employer but has no profile, redirecting to registration");
             navigate("/employer/register");
           } else {
             // Default to dashboard - they'll be prompted to complete profile there
+            console.log("User has no profile, redirecting to dashboard");
             navigate("/dashboard");
           }
         }
       }
     } catch (error: any) {
       console.error("Login error:", error);
-      toast({
+      uiToast({
         title: "Error",
         description: error.message || "Failed to sign in",
         variant: "destructive"
       });
+      toast.error(error.message || "Failed to sign in");
     } finally {
       setLoading(false);
     }
@@ -227,7 +234,7 @@ const AuthPage = () => {
                         variant={userType === "employer" ? "default" : "outline"}
                         onClick={() => setUserType("employer")}
                         className="w-full"
-                      >
+                        >
                         Employer
                       </Button>
                     </div>

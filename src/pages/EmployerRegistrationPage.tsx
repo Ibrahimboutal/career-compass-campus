@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 
 export default function EmployerRegistrationPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, userRole } = useAuth();
 
   if (loading) {
     return (
@@ -16,6 +16,11 @@ export default function EmployerRegistrationPage() {
 
   if (!user) {
     return <Navigate to="/auth" replace />;
+  }
+
+  // If user already has a recruiter role, redirect to employer dashboard
+  if (userRole === "recruiter") {
+    return <Navigate to="/employer/dashboard" replace />;
   }
 
   return (

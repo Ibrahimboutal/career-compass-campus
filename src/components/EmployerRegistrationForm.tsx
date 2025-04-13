@@ -1,7 +1,7 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,7 +28,7 @@ export function EmployerRegistrationForm() {
   const { user } = useAuth();
   const { createEmployer } = useEmployers();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
 
   const form = useForm<EmployerFormValues>({
     resolver: zodResolver(employerFormSchema),
@@ -43,7 +43,7 @@ export function EmployerRegistrationForm() {
 
   const onSubmit = async (values: EmployerFormValues) => {
     if (!user) {
-      toast({
+      uiToast({
         title: "Error",
         description: "You must be logged in to register as an employer",
         variant: "destructive",
@@ -53,6 +53,8 @@ export function EmployerRegistrationForm() {
 
     setIsSubmitting(true);
     try {
+      console.log("Creating employer profile with user_id:", user.id);
+      
       const result = await createEmployer({
         user_id: user.id,
         company_name: values.companyName,
@@ -65,18 +67,26 @@ export function EmployerRegistrationForm() {
 
       if (!result) throw new Error("Failed to create employer profile");
 
-      toast({
+      // Use both toast systems to ensure the user sees the notification
+      uiToast({
         title: "Success",
         description: "Your employer account has been created",
       });
-
-      navigate("/employer/dashboard");
+      
+      toast.success("Your employer account has been created");
+      
+      // Force reload to update user role
+      window.location.href = "/employer/dashboard";
     } catch (error: any) {
-      toast({
+      console.error("Error creating employer:", error);
+      
+      uiToast({
         title: "Error",
         description: error.message || "Failed to register as an employer",
         variant: "destructive",
       });
+      
+      toast.error(error.message || "Failed to register as an employer");
     } finally {
       setIsSubmitting(false);
     }
