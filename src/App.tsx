@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,6 +19,7 @@ import EmployerJobApplicationsPage from "./pages/EmployerJobApplicationsPage";
 import EmployerApplicationDetailPage from "./pages/EmployerApplicationDetailPage";
 import EmployerRegistrationPage from "./pages/EmployerRegistrationPage";
 import EmployerDashboardPage from "./pages/EmployerDashboardPage";
+import EmployerProfileEditPage from "./pages/EmployerProfileEditPage";
 import NotFound from "./pages/NotFound";
 import { Skeleton } from "./components/ui/skeleton";
 import { Progress } from "./components/ui/progress";
@@ -162,6 +162,15 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <EmployerDashboardPage />
+          </ProtectedRoute>
+        } 
+      />
+      {/* Employer Profile Edit Route */}
+      <Route 
+        path="/employer/profile/edit" 
+        element={
+          <ProtectedRoute>
+            <EmployerProfileEditPage />
           </ProtectedRoute>
         } 
       />

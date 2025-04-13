@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 export function Navbar() {
   const isMobile = useIsMobile();
   const [showSearch, setShowSearch] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, signOut, userRole } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -36,6 +37,11 @@ export function Navbar() {
         variant: "destructive"
       });
     }
+  };
+
+  // Determine profile link based on user role
+  const getProfileLink = () => {
+    return userRole === 'recruiter' ? "/employer/profile/edit" : "/profile";
   };
 
   return (
@@ -95,7 +101,7 @@ export function Navbar() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem asChild>
-                    <Link to="/profile" className="cursor-pointer">Profile</Link>
+                    <Link to={getProfileLink()} className="cursor-pointer">Profile</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
