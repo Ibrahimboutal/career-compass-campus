@@ -54,6 +54,11 @@ const AuthPage = () => {
             });
           
           if (studentError) throw studentError;
+        } else if (userType === 'employer') {
+          // For employers, we'll redirect to the employer registration page
+          // but we don't create an employer record yet
+          navigate("/employer/register");
+          return;
         }
         
         toast({
@@ -61,16 +66,14 @@ const AuthPage = () => {
           description: "Welcome to CampusJobs! Please check your email to verify your account."
         });
         
-        if (userType === 'employer') {
-          navigate("/employer/register");
-        } else {
-          navigate("/dashboard");
-        }
+        // Auto-login after registration
+        navigate("/dashboard");
       }
     } catch (error: any) {
+      console.error("Signup error:", error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to create account",
         variant: "destructive"
       });
     } finally {
@@ -95,21 +98,43 @@ const AuthPage = () => {
         description: "You've successfully signed in."
       });
       
-      // Check if user is an employer
+      // Check if the user is an employer
       const { data: employerData, error: employerError } = await supabase
         .from('employers')
         .select('id')
-        .eq('user_id', data.user.id);
+        .eq('user_id', data.user.id)
+        .maybeSingle();
       
-      if (!employerError && employerData && employerData.length > 0) {
-        navigate("/employer/dashboard");
-      } else {
+      if (!employerError && employerData) {
         navigate("/dashboard");
+      } else {
+        // Check if the user is a student
+        const { data: studentData, error: studentError } = await supabase
+          .from('students')
+          .select('id')
+          .eq('user_id', data.user.id)
+          .maybeSingle();
+        
+        if (!studentError && studentData) {
+          navigate("/dashboard");
+        } else {
+          // If no profile exists, but the user has signed up previously,
+          // direct them to complete their profile based on user_type metadata
+          const userType = data.user.user_metadata?.user_type;
+          
+          if (userType === 'employer') {
+            navigate("/employer/register");
+          } else {
+            // Default to dashboard - they'll be prompted to complete profile there
+            navigate("/dashboard");
+          }
+        }
       }
     } catch (error: any) {
+      console.error("Login error:", error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to sign in",
         variant: "destructive"
       });
     } finally {

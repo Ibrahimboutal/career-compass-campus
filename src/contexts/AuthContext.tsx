@@ -24,6 +24,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const getInitialSession = async () => {
       try {
         const { data: { session: currentSession } } = await supabase.auth.getSession();
+        
+        console.log("Initial session check:", currentSession?.user?.id);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
@@ -35,11 +37,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         console.error("Error getting initial session:", error);
       } finally {
-        setLoading(false);
+        setLoading(false); // Always set loading to false when done
       }
     };
-
-    getInitialSession();
 
     // Set up the auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -48,13 +48,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
-        if (currentSession?.user) {
-          await checkUserRole(currentSession.user.id);
-        } else {
+        // Handle different auth events
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          if (currentSession?.user) {
+            await checkUserRole(currentSession.user.id);
+          }
+        } else if (event === 'SIGNED_OUT') {
           setUserRole(null);
         }
       }
     );
+    
+    // Initialize
+    getInitialSession();
 
     return () => subscription.unsubscribe();
   }, []);
@@ -106,15 +112,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error("Error signing out:", error);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Error signing out:", error);
+      }
+      setUserRole(null);
+    } catch (error) {
+      console.error("Unexpected error during sign out:", error);
     }
-    setUserRole(null);
+  };
+
+  const value = {
+    session,
+    user,
+    userRole,
+    signOut,
+    loading
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, userRole, signOut, loading }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

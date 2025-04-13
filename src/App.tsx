@@ -20,6 +20,7 @@ import EmployerJobApplicationsPage from "./pages/EmployerJobApplicationsPage";
 import EmployerApplicationDetailPage from "./pages/EmployerApplicationDetailPage";
 import NotFound from "./pages/NotFound";
 import { Skeleton } from "./components/ui/skeleton";
+import { Progress } from "./components/ui/progress";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,15 +31,19 @@ const queryClient = new QueryClient({
   },
 });
 
-// Loading component
+// Loading component with progress bar
 const LoadingScreen = () => (
   <div className="flex flex-col items-center justify-center h-screen p-4">
-    <div className="w-full max-w-md space-y-4">
-      <Skeleton className="h-12 w-1/2 mx-auto" />
-      <Skeleton className="h-4 w-3/4 mx-auto" />
-      <div className="space-y-2">
+    <div className="w-full max-w-md space-y-6">
+      <div className="flex flex-col items-center">
+        <h2 className="text-2xl font-bold mb-2">Loading CampusJobs</h2>
+        <p className="text-muted-foreground mb-4">Please wait while we set things up...</p>
+      </div>
+      <Progress value={75} className="h-2 w-full" />
+      <div className="space-y-4 mt-8">
         <Skeleton className="h-8 w-full" />
         <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-3/4" />
       </div>
     </div>
   </div>
