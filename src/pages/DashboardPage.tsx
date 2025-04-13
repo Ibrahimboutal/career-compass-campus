@@ -14,6 +14,7 @@ import { Briefcase, Calendar, Clock, Building2, User, BookMarked, MessageSquare,
 import { Job, Employer } from "@/data/types";
 import { useEmployers } from "@/hooks/useEmployers";
 import { mapSupabaseJobsToJobs } from "@/utils/mappers";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface StatsCardProps {
   title: string;
@@ -236,6 +237,91 @@ const StudentDashboard = () => {
   );
 };
 
+// Main Dashboard Page
+const DashboardPage = () => {
+  const { user, userRole, loading } = useAuth();
+  const [isPageLoading, setIsPageLoading] = useState(true);
+  const { toast } = useToast();
+  
+  console.log("DashboardPage - user:", user?.id, "userRole:", userRole, "loading:", loading);
+
+  useEffect(() => {
+    // Short timeout to ensure all auth checks are complete
+    const timer = setTimeout(() => {
+      setIsPageLoading(false);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading || isPageLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gray-50">
+        <Navbar />
+        <main className="flex-1 container mx-auto px-4 py-8">
+          <div className="space-y-4">
+            <Skeleton className="h-12 w-48" />
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-32 w-full" />
+              ))}
+            </div>
+            <Skeleton className="h-64 w-full" />
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Redirect to auth if not logged in
+  if (!user) {
+    console.log("User not logged in, redirecting to auth page");
+    return <Navigate to="/auth" replace />;
+  }
+
+  // Show appropriate dashboard based on user role
+  return (
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      <Navbar />
+      <main className="flex-1 container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+        </div>
+        
+        {userRole === 'recruiter' ? (
+          <EmployerDashboard />
+        ) : userRole === 'student' ? (
+          <StudentDashboard />
+        ) : (
+          <div className="text-center py-12">
+            <Card>
+              <CardHeader>
+                <CardTitle>Complete Your Profile</CardTitle>
+                <CardDescription>
+                  Tell us whether you're a student or an employer to continue.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-muted-foreground">
+                  Please complete your profile to access the dashboard.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+                  <Button asChild>
+                    <Link to="/profile">Set Up Student Profile</Link>
+                  </Button>
+                  <Button asChild>
+                    <Link to="/employer/register">Register as Employer</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+};
+
 // Employer Dashboard Component
 const EmployerDashboard = () => {
   const { user } = useAuth();
@@ -450,12 +536,12 @@ const EmployerDashboard = () => {
                         <Link to={`/jobs/${job.id}`}>View Listing</Link>
                       </Button>
                       <Button asChild variant="outline" size="sm">
-                        <Link to={`/employer/jobs/${job.id}/applications`}>
+                        <Link to={`/jobs/${job.id}/applications`}>
                           View Applications ({applicationsCount[job.id] || 0})
                         </Link>
                       </Button>
                       <Button asChild variant="outline" size="sm">
-                        <Link to={`/employer/jobs/${job.id}/edit`}>Edit</Link>
+                        <Link to={`/jobs/${job.id}/edit`}>Edit</Link>
                       </Button>
                     </div>
                   </div>
@@ -525,79 +611,6 @@ const EmployerDashboard = () => {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
-  );
-};
-
-// Main Dashboard Page
-const DashboardPage = () => {
-  const { user, userRole, loading } = useAuth();
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    if (!loading) {
-      setIsLoading(false);
-    }
-  }, [loading]);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
-        <Navbar />
-        <main className="flex-1 container mx-auto px-4 py-8">
-          <div className="text-center py-20">
-            <p>Loading dashboard...</p>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  // Redirect to auth if not logged in
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-
-  // Show appropriate dashboard based on user role
-  return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-        </div>
-        
-        {userRole === 'recruiter' ? (
-          <EmployerDashboard />
-        ) : userRole === 'student' ? (
-          <StudentDashboard />
-        ) : (
-          <div className="text-center py-12">
-            <Card>
-              <CardHeader>
-                <CardTitle>Complete Your Profile</CardTitle>
-                <CardDescription>
-                  Tell us whether you're a student or an employer to continue.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-muted-foreground">
-                  Please complete your profile to access the dashboard.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-                  <Button asChild>
-                    <Link to="/profile">Set Up Student Profile</Link>
-                  </Button>
-                  <Button asChild>
-                    <Link to="/employer/register">Register as Employer</Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-      </main>
     </div>
   );
 };

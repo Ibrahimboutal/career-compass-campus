@@ -18,9 +18,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<"student" | "recruiter" | null>(null);
   const [loading, setLoading] = useState(true);
+  const [roleCheckComplete, setRoleCheckComplete] = useState(false);
 
   useEffect(() => {
-    // Get the initial session first
+    // Set up the auth state listener first
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        console.log("Auth state changed:", event, currentSession?.user?.id);
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        
+        // Handle different auth events
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          if (currentSession?.user) {
+            // Defer Supabase calls to prevent deadlocks
+            setTimeout(() => {
+              checkUserRole(currentSession.user.id);
+            }, 0);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setUserRole(null);
+          setRoleCheckComplete(true);
+        }
+      }
+    );
+    
+    // Get the initial session
     const getInitialSession = async () => {
       try {
         const { data: { session: currentSession } } = await supabase.auth.getSession();
@@ -33,37 +56,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await checkUserRole(currentSession.user.id);
         } else {
           setUserRole(null);
+          setRoleCheckComplete(true);
+          setLoading(false);
         }
       } catch (error) {
         console.error("Error getting initial session:", error);
-      } finally {
-        setLoading(false); // Always set loading to false when done
+        setRoleCheckComplete(true);
+        setLoading(false);
       }
     };
-
-    // Set up the auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
-        console.log("Auth state changed:", event, currentSession?.user?.id);
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        
-        // Handle different auth events
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          if (currentSession?.user) {
-            await checkUserRole(currentSession.user.id);
-          }
-        } else if (event === 'SIGNED_OUT') {
-          setUserRole(null);
-        }
-      }
-    );
     
     // Initialize
     getInitialSession();
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Set loading to false when role check is complete
+  useEffect(() => {
+    if (roleCheckComplete) {
+      setLoading(false);
+    }
+  }, [roleCheckComplete]);
 
   const checkUserRole = async (userId: string) => {
     try {
@@ -82,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (employer) {
         console.log("User is a recruiter");
         setUserRole('recruiter');
+        setRoleCheckComplete(true);
         return;
       }
       
@@ -99,20 +114,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (student) {
         console.log("User is a student");
         setUserRole('student');
+        setRoleCheckComplete(true);
         return;
       }
       
       // If neither, role is null
       console.log("User has no role assigned");
       setUserRole(null);
+      setRoleCheckComplete(true);
     } catch (error) {
       console.error('Error determining user role:', error);
       setUserRole(null);
+      setRoleCheckComplete(true);
     }
   };
 
   const signOut = async () => {
     try {
+      setLoading(true);
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error("Error signing out:", error);
@@ -120,6 +139,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUserRole(null);
     } catch (error) {
       console.error("Unexpected error during sign out:", error);
+    } finally {
+      setLoading(false);
     }
   };
 

@@ -65,7 +65,10 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const AppRoutes = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, userRole } = useAuth();
+  
+  // Added console logs for debugging
+  console.log("AppRoutes - loading:", loading, "user:", user?.id, "userRole:", userRole);
   
   if (loading) {
     return <LoadingScreen />;
