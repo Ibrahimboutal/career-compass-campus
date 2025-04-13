@@ -34,33 +34,46 @@ export function ContactDirectory({ type }: ContactDirectoryProps) {
     const fetchContacts = async () => {
       try {
         setIsLoading(true);
+        console.log(`Fetching ${type}...`);
         
         if (type === "recruiters") {
           // Fetch recruiters (employers)
           const { data, error } = await supabase
             .from("employers")
-            .select("user_id, company_name");
+            .select("user_id, company_name")
+            .neq('user_id', user?.id || ''); // Exclude current user
             
-          if (error) throw error;
+          if (error) {
+            console.error("Error fetching recruiters:", error);
+            throw error;
+          }
+          
+          console.log("Recruiters data:", data);
           
           const formattedContacts = data.map(employer => ({
             id: employer.user_id,
-            name: employer.company_name,
+            name: employer.company_name || "Company",
             type: "recruiter" as const
           }));
           
           setContacts(formattedContacts);
           setFilteredContacts(formattedContacts);
         } else {
-          // Fetch students - now from students table instead of profiles
+          // Fetch students
           const { data, error } = await supabase
             .from("students")
-            .select("user_id, name, major");
+            .select("user_id, name, major")
+            .neq('user_id', user?.id || ''); // Exclude current user
             
-          if (error) throw error;
+          if (error) {
+            console.error("Error fetching students:", error);
+            throw error;
+          }
+          
+          console.log("Students data:", data);
           
           const formattedContacts = data
-            .filter(student => student.name) // Only include students with names
+            .filter(student => student.user_id) // Make sure user_id exists
             .map(student => ({
               id: student.user_id,
               name: student.name || "Student",
@@ -79,8 +92,12 @@ export function ContactDirectory({ type }: ContactDirectoryProps) {
       }
     };
     
-    fetchContacts();
-  }, [type]);
+    if (user) {
+      fetchContacts();
+    } else {
+      setIsLoading(false);
+    }
+  }, [type, user]);
   
   useEffect(() => {
     // Filter contacts based on search term
@@ -105,15 +122,7 @@ export function ContactDirectory({ type }: ContactDirectoryProps) {
     
     try {
       // Create or get existing chat room
-      let roomId: string | null;
-      
-      if (contactType === "recruiter") {
-        // Student chatting with recruiter
-        roomId = await createChatRoom(contactId);
-      } else {
-        // Recruiter chatting with student
-        roomId = await createChatRoom(contactId);
-      }
+      const roomId = await createChatRoom(contactId);
       
       if (roomId) {
         navigate("/messages");
@@ -149,6 +158,11 @@ export function ContactDirectory({ type }: ContactDirectoryProps) {
         ) : filteredContacts.length === 0 ? (
           <div className="text-center py-10">
             <p className="text-muted-foreground">No {type} found</p>
+            {contacts.length === 0 && (
+              <p className="text-sm text-muted-foreground mt-2">
+                There are currently no {type} available for chat
+              </p>
+            )}
           </div>
         ) : (
           <div className="space-y-3">
