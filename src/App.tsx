@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -5,6 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ChatProvider } from "@/contexts/ChatContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
+import { ScrollToTop } from "@/components/ui/ScrollToTop";
 import Index from "./pages/Index";
 import AuthPage from "./pages/AuthPage";
 import JobsPage from "./pages/JobsPage";
@@ -23,6 +26,7 @@ import EmployerProfileEditPage from "./pages/EmployerProfileEditPage";
 import NotFound from "./pages/NotFound";
 import { Skeleton } from "./components/ui/skeleton";
 import { Progress } from "./components/ui/progress";
+import { LoadingSpinner } from "./components/ui/LoadingSpinner";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -181,17 +185,20 @@ const AppRoutes = () => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <ChatProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppRoutes />
-          </BrowserRouter>
-        </ChatProvider>
-      </AuthProvider>
-    </TooltipProvider>
+    <ThemeProvider>
+      <TooltipProvider>
+        <AuthProvider>
+          <ChatProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AppRoutes />
+              <ScrollToTop />
+            </BrowserRouter>
+          </ChatProvider>
+        </AuthProvider>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
