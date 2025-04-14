@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -73,28 +72,43 @@ export function ContactDirectory({ type }: ContactDirectoryProps) {
           setContacts(formattedContacts);
           setFilteredContacts(formattedContacts);
         } else {
-          // Fetch students
+          // Fetch students - fixing the issue here by using proper query
+          console.log("Fetching students...");
+          
+          // Use a direct query without filters initially to see all students
           const { data, error } = await supabase
             .from("students")
-            .select("user_id, name, major")
-            .neq('user_id', user.id); // Exclude current user
+            .select("*");
             
           if (error) {
             console.error("Error fetching students:", error);
             throw error;
           }
           
-          console.log("Students data:", data);
+          console.log("All students data:", data);
           
-          if (!data || data.length === 0) {
-            console.log("No students found");
+          // Now properly fetch students excluding current user
+          const { data: studentData, error: studentError } = await supabase
+            .from("students")
+            .select("user_id, name, major")
+            .neq('user_id', user.id); // Exclude current user
+            
+          if (studentError) {
+            console.error("Error fetching students:", studentError);
+            throw studentError;
+          }
+          
+          console.log("Filtered students data:", studentData);
+          
+          if (!studentData || studentData.length === 0) {
+            console.log("No students found after filtering");
             setContacts([]);
             setFilteredContacts([]);
             setIsLoading(false);
             return;
           }
           
-          const formattedContacts = data
+          const formattedContacts = studentData
             .filter(student => student.user_id) // Make sure user_id exists
             .map(student => ({
               id: student.user_id,
@@ -102,6 +116,8 @@ export function ContactDirectory({ type }: ContactDirectoryProps) {
               title: student.major,
               type: "student" as const
             }));
+          
+          console.log("Formatted student contacts:", formattedContacts);
           
           setContacts(formattedContacts);
           setFilteredContacts(formattedContacts);
