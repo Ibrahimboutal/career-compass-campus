@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import { ChatNavItem } from "@/components/ChatNavItem";
 
 export function Navbar() {
   const isMobile = useIsMobile();
@@ -100,6 +101,16 @@ export function Navbar() {
                   </Button>
                 </Link>
               )}
+              
+              {/* Add messages icon with unread count */}
+              <ChatNavItem />
+              
+              {/* Add connections/find users link */}
+              <Link to="/connections">
+                <Button variant="ghost" className="text-muted-foreground">
+                  Connections
+                </Button>
+              </Link>
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

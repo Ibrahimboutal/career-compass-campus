@@ -26,7 +26,7 @@ export function ContactDirectory({ type }: ContactDirectoryProps) {
   const [filteredContacts, setFilteredContacts] = useState<ContactItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const { createChatRoom } = useChat();
   const navigate = useNavigate();
 
@@ -36,12 +36,18 @@ export function ContactDirectory({ type }: ContactDirectoryProps) {
         setIsLoading(true);
         console.log(`Fetching ${type}...`);
         
+        // Make sure we have a valid user
+        if (!user) {
+          console.error("No user found");
+          return;
+        }
+        
         if (type === "recruiters") {
           // Fetch recruiters (employers)
           const { data, error } = await supabase
             .from("employers")
             .select("user_id, company_name")
-            .neq('user_id', user?.id || ''); // Exclude current user
+            .neq('user_id', user.id); // Exclude current user
             
           if (error) {
             console.error("Error fetching recruiters:", error);
@@ -49,6 +55,14 @@ export function ContactDirectory({ type }: ContactDirectoryProps) {
           }
           
           console.log("Recruiters data:", data);
+          
+          if (!data || data.length === 0) {
+            console.log("No recruiters found");
+            setContacts([]);
+            setFilteredContacts([]);
+            setIsLoading(false);
+            return;
+          }
           
           const formattedContacts = data.map(employer => ({
             id: employer.user_id,
@@ -63,7 +77,7 @@ export function ContactDirectory({ type }: ContactDirectoryProps) {
           const { data, error } = await supabase
             .from("students")
             .select("user_id, name, major")
-            .neq('user_id', user?.id || ''); // Exclude current user
+            .neq('user_id', user.id); // Exclude current user
             
           if (error) {
             console.error("Error fetching students:", error);
@@ -71,6 +85,14 @@ export function ContactDirectory({ type }: ContactDirectoryProps) {
           }
           
           console.log("Students data:", data);
+          
+          if (!data || data.length === 0) {
+            console.log("No students found");
+            setContacts([]);
+            setFilteredContacts([]);
+            setIsLoading(false);
+            return;
+          }
           
           const formattedContacts = data
             .filter(student => student.user_id) // Make sure user_id exists
@@ -117,6 +139,13 @@ export function ContactDirectory({ type }: ContactDirectoryProps) {
   const handleStartChat = async (contactId: string, contactType: "student" | "recruiter") => {
     if (!user) {
       toast.error("You must be logged in to start a chat");
+      navigate("/auth");
+      return;
+    }
+    
+    // Don't allow recruiters to chat with themselves
+    if (user.id === contactId) {
+      toast.error("You cannot chat with yourself");
       return;
     }
     
@@ -125,13 +154,46 @@ export function ContactDirectory({ type }: ContactDirectoryProps) {
       const roomId = await createChatRoom(contactId);
       
       if (roomId) {
+        toast.success("Chat started");
         navigate("/messages");
+      } else {
+        toast.error("Failed to start chat");
       }
     } catch (error) {
       console.error("Error starting chat:", error);
       toast.error("Failed to start chat");
     }
   };
+  
+  // Determine what type of contacts this user should be looking for
+  const shouldFetchRecruiters = userRole === "student";
+  const correctDirectoryType = shouldFetchRecruiters ? "recruiters" : "students";
+  
+  // If user is viewing the wrong directory for their role, show a message
+  if (type !== correctDirectoryType && user) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Available {type === "recruiters" ? "Recruiters" : "Students"}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-10">
+            <p className="text-muted-foreground">
+              {userRole === "student" 
+                ? "As a student, you can connect with recruiters." 
+                : "As a recruiter, you can connect with students."}
+            </p>
+            <Button 
+              className="mt-4" 
+              onClick={() => navigate(`/connections`)}
+            >
+              Go to Connections
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
   
   return (
     <Card>

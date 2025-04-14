@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -42,7 +43,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [loadingRooms, setLoadingRooms] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
 
   // Fetch chat rooms
   useEffect(() => {
@@ -55,13 +56,32 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     const fetchChatRooms = async () => {
       try {
         setLoadingRooms(true);
-        const { data, error } = await supabase
+        
+        // Query using filters based on user role
+        const query = supabase
           .from('chat_rooms')
-          .select('*')
-          .or(`student_id.eq.${user.id},recruiter_id.eq.${user.id}`)
-          .order('updated_at', { ascending: false });
-
-        if (error) throw error;
+          .select('*');
+        
+        if (userRole === 'student') {
+          query.eq('student_id', user.id);
+        } else if (userRole === 'recruiter') {
+          query.eq('recruiter_id', user.id);
+        } else {
+          // If role is not determined yet, try both
+          query.or(`student_id.eq.${user.id},recruiter_id.eq.${user.id}`);
+        }
+        
+        // Add sorting
+        query.order('updated_at', { ascending: false });
+        
+        const { data, error } = await query;
+        
+        if (error) {
+          console.error('Error fetching chat rooms:', error);
+          throw error;
+        }
+        
+        console.log('Chat rooms fetched:', data);
         setChatRooms(data || []);
         
         // Calculate unread count
@@ -110,7 +130,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     return () => {
       supabase.removeChannel(roomsSubscription);
     };
-  }, [user]);
+  }, [user, userRole]);
 
   // Fetch messages for current room
   useEffect(() => {
@@ -129,6 +149,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           .order('created_at', { ascending: true });
 
         if (error) throw error;
+        
+        console.log('Messages fetched:', data);
         setMessages(data || []);
         
         // Mark messages as read
@@ -143,6 +165,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
               .from('chat_messages')
               .update({ is_read: true })
               .in('id', unreadIds);
+              
+            console.log('Marked messages as read:', unreadIds);
           }
         }
       } catch (error) {
@@ -189,41 +213,28 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       toast.error("You must be logged in to start a chat");
       return null;
     }
+    
+    if (!userRole) {
+      toast.error("Your account type isn't set up yet");
+      return null;
+    }
 
     try {
-      // Determine if current user is student or recruiter
-      const { data: employerData } = await supabase
-        .from('employers')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      
-      const isCurrentUserRecruiter = !!employerData;
-      
-      // Determine if partner is student or recruiter
-      const { data: partnerEmployerData } = await supabase
-        .from('employers')
-        .select('id')
-        .eq('user_id', partnerId)
-        .maybeSingle();
-      
-      const isPartnerRecruiter = !!partnerEmployerData;
-      
-      // Both users can't be the same type (both recruiter or both student)
-      if (isCurrentUserRecruiter === isPartnerRecruiter) {
-        toast.error(`You cannot chat with another ${isCurrentUserRecruiter ? 'recruiter' : 'student'}`);
-        return null;
-      }
+      console.log('Creating chat room with partner:', partnerId);
+      console.log('Current user role:', userRole);
       
       let studentId: string;
       let recruiterId: string;
       
-      if (isCurrentUserRecruiter) {
+      if (userRole === 'student') {
+        studentId = user.id;
+        recruiterId = partnerId;
+      } else if (userRole === 'recruiter') {
         recruiterId = user.id;
         studentId = partnerId;
       } else {
-        recruiterId = partnerId;
-        studentId = user.id;
+        toast.error("Your role must be either student or recruiter");
+        return null;
       }
 
       // Check if room already exists
@@ -233,11 +244,15 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         .eq('student_id', studentId)
         .eq('recruiter_id', recruiterId);
 
-      if (fetchError) throw fetchError;
+      if (fetchError) {
+        console.error('Error checking existing rooms:', fetchError);
+        throw fetchError;
+      }
 
       // If room exists, return its ID
       if (existingRooms && existingRooms.length > 0) {
         const existingRoom = existingRooms[0];
+        console.log('Found existing room:', existingRoom);
         setCurrentRoom(existingRoom);
         return existingRoom.id;
       }
@@ -253,8 +268,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating chat room:', error);
+        throw error;
+      }
 
+      console.log('Created new room:', data);
+      
       // Add the new room to the list and set as current
       setChatRooms(prevRooms => [data, ...prevRooms]);
       setCurrentRoom(data);
@@ -275,6 +295,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
 
     try {
+      console.log('Sending message:', content);
+      console.log('To room:', currentRoom.id);
+      
       const { error } = await supabase
         .from('chat_messages')
         .insert({
@@ -283,7 +306,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           content
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error sending message:', error);
+        throw error;
+      }
+      
+      console.log('Message sent successfully');
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error("Failed to send message");
