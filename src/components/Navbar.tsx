@@ -87,11 +87,19 @@ export function Navbar() {
 
           {user ? (
             <>
-              <Link to="/dashboard">
-                <Button variant="ghost" className="text-muted-foreground">
-                  Dashboard
-                </Button>
-              </Link>
+              {userRole === 'recruiter' ? (
+                <Link to="/employer/dashboard">
+                  <Button variant="ghost" className="text-muted-foreground">
+                    Dashboard
+                  </Button>
+                </Link>
+              ) : (
+                <Link to="/dashboard">
+                  <Button variant="ghost" className="text-muted-foreground">
+                    Dashboard
+                  </Button>
+                </Link>
+              )}
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
